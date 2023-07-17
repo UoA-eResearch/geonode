@@ -409,6 +409,46 @@ class TestFacets(GeoNodeBaseTestSupport):
             else:
                 self.assertEqual(order, conf["order"], "Unexpected order")
 
+    def test_count0(self):
+        reginfo = RegionFacetProvider().get_info()
+        t0info = facet_registry.get_provider("t_0").get_info()
+        t1info = facet_registry.get_provider("t_1").get_info()
+        regfilter = reginfo["filter"]
+        t0filter = t0info["filter"]
+
+        def tid(tk):
+            return self.thesauri_k[tk].id
+
+        for facet, params, items in (
+            # thesauri
+            ("t_1", {regfilter: "R0"}, {"T1_K0_en": 2}),
+            ("t_1", {regfilter: "R0", "key": [tid("1_0")]}, {"T1_K0_en": 2}),
+            ("t_1", {regfilter: "R0", t0filter: tid("0_1")}, {}),
+            ("t_1", {regfilter: "R0", t0filter: tid("0_1"), "key": [tid("1_0")]}, {"T1_K0_en": None}),
+            (
+                "t_1",
+                {regfilter: "R0", t0filter: tid("0_1"), "key": [tid("1_1"), tid("1_0")]},
+                {"T1_K0_en": None, "T1_K1_en": None},
+            ),
+            # regions
+            # TODO
+        ):
+            req = self.rf.get(reverse("get_facet", args=[facet]), data=params)
+            res: JsonResponse = views.get_facet(req, facet)
+            obj = json.loads(res.content)
+            # self.assertEqual(totals, obj["topics"]["total"], f"Bad totals for facet '{facet} and params {params}")
+
+            self.assertEqual(
+                len(items),
+                len(obj["topics"]["items"]),
+                f"Bad count for items '{facet} \n PARAMS: {params} \n RESULT: {obj} \n EXPECTED: {items}",
+            )
+            # search item
+            for item in items.keys():
+                found = next((i for i in obj["topics"]["items"] if i["label"] == item), None)
+                self.assertIsNotNone(found, f"Topic '{item}' not found in facet {facet} -- {obj}")
+                self.assertEqual(items[item], found.get("count", None), f"Bad count for facet '{facet}:{item}")
+
     def test_user_auth(self):
         # make sure the user authorization pre-filters the visible resources
         # TODO test
