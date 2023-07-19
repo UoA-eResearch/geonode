@@ -2,7 +2,41 @@
 
 <script type="text/javascript">
 
+  /*
+  $(document).ready(function() {
+      $('input[type=radio][name="view_resourcebase_users"]').change(function() {
+          console.log('hello 3')
+          alert($(this).val()); // or, use `this.value`
+      });
+  }); */
+
+  function testthis()
+  {    
+    console.log('here 0')
+    var permissions = {
+      'users': {},
+      'groups': {}
+    }
+    //if (typeof form === 'string'){
+    //  form = $(form);
+    //}
+    //var data = form.serializeObject();
+
+    /*
+    * If there's the anonymous user then set it's view permission and pop it
+    */
+    permissions['users']['AnonymousUser'] = [];
+    //if (data.hasOwnProperty('view_anonymous')) {
+      permissions['users']['AnonymousUser'] = ['view_resourcebase'];
+      //delete data['view_anonymous'];
+    //}
+      console.log( ['view_resourcebase'] )  
+    
+  }
+
+
   function permissionsString(form, type) {
+    console.log('here 1')
     var permissions = {
       'users': {},
       'groups': {}
@@ -281,7 +315,8 @@
             processResults: function (data, params) {
               if (data.users.length)
                 return {
-                  results: data.users.map(d => ({ id: d.username, name: d.username })),
+                  //results: data.users.map(d => ({ id: d.username, name: d.username })),
+                  results: data.users.map(d => ({ id: d.username, name: d.username , publickey: d.publickey })),
                   pagination: {
                     // more: !!data.paging.next
                     more: false
@@ -306,7 +341,16 @@
           },
           dataAdapter: Utils.Decorate(UsersAjaxAdapter, MinimumInputLength),
           templateResult: function (item) { return (item.loading) ? item.text : item.name; },
-          templateSelection: function (item) { return item.name; }
+          //old code
+          //templateSelection: function (item) { return item.name; }
+          templateSelection: function (item) { 
+            // new code 
+            //if (!window.users) window.users = []
+            //   window.users.push(item)
+            if (!window.users) window.users = {}
+              window.users[item.id] = item
+            return item.name; 
+            }
         });
       });
     }
@@ -656,5 +700,8 @@
     $("#_bulk_permissions").on('hidden.bs.modal', function (e) {
       $('#bulk_perms_message').addClass("hidden");
     });
+
+    
+
   });
 </script>

@@ -1,0 +1,536 @@
+
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load base_tags %}
+{% load staticfiles %} 
+
+{% load static %}
+{% load floppyforms %}
+
+{% block title %} {% trans "Upload Layer"  %} - {{ block.super }}  {% endblock %}
+
+{% block body_class %}layers upload{% endblock %}
+
+
+{% block head %}
+
+{{ block.super }}
+{% endblock %}
+
+{% block body_outer %}
+
+		<!-- Sidebar -->
+			<section id="sidebar">
+				<div class="inner">
+					<nav>
+						<ul>
+							<li><a href="#intro">Welcome</a></li>
+							<li><a href="#one">Safeguard</a></li>
+							<li><a href="#two">Verification</a></li>							
+						</ul>
+					</nav>
+				</div>
+			</section>
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Intro -->
+					<section id="intro" class="wrapper style1 fullscreen fade-up">
+						<div class="inner">
+							<h1>Data Sovereignty Tool</h1>
+							<p>This tool helps to secure sensitive location data by masking and encrypting it
+							<!--	<a href="http://html5up.net/license">Creative Commons</a>.</p> -->
+							<ul class="actions">
+								<li><a href="#one" class="button scrolly">Safeguard your maps</a></li>
+								<li><a href="#three" class="button scrolly" onclick="myfunction()">Safeguard your Documents</a> </li>
+							</ul>
+						</div>
+					</section>
+
+				<!-- One -->
+					<section id="one" class="wrapper style2 spotlights">
+					<div class="inner">
+						<h2>
+							<!-- <p class="step-icon"><span>1</span></p> -->
+							<span class="step-text">Safeguard</span>
+						</h2>
+						
+						<div id="output"></div>
+												
+						<!--  Start Horizontal Flow Code End 14-Sep-2021 -->
+							      <!-- Start Multiform HTML https://www.geeksforgeeks.org/how-to-create-multi-step-progress-bar-using-bootstrap/ --> 
+								  <section class="multi_step_form">  
+								  <div id="msform"> 
+									<!-- <span>In order to use this service/safeguard you map, you have to complete the steps in this process</span> -->
+									<ul id="progressbar">
+									  <li class="active">Upload Map</li>
+									  <li>Display</li>
+									  <li>Masking</li>
+									  <li>Encryption</li>
+									  <li>Notorisation</li> 
+									  <!-- <li>Encrypt</li> -->
+									</ul>									
+										<fieldset>
+											<div>
+												<!-- <span>Load the data you want to mask: </span><span class="icon fa-info-circle tooltip"> -->
+													<span class="tooltiptext">Load your sensitive document or map (zipped shapefile). You can use sample map <a style="color: #f3eadb;" href="all_clusters_kamloops.zip"> data.</a> </span></span><br>
+													<input type="file" id="sensitiveInput" action="all_clusters_kamloops.zip" onchange="return fileValidation(1)" >  
+													<!-- accept=".zip" -->
+											</div><br>
+											<!-- <button type="button" class="action-button previous_button">Back</button> -->
+											<button type="button" id= "firstnextaction-button" class="next action-button" disabled >Continue</button> 
+											<button type="button" id= "firstskipaction-button" class="skip action-button">Skip</button>   
+										</fieldset>
+										<fieldset>
+											<div id="Displaying" class="tabcontent">											
+												<div>
+													<button style="margin: 1rem 0 0 0; width: 100%;" id="display23">Display Data </button>
+												</div>
+											</div>
+											<button type="button" class="action-button previous previous_button">Back</button>
+											<button type="button" class="next action-button">Continue</button>  
+										</fieldset>  
+										<fieldset>
+											<div>
+												<span><strong>Distance</strong>: set the minimum and maximum distance in meters that any given point will move: </span> <span class="icon fa-info-circle tooltip"><span class="tooltiptext"></span></span>
+												<br>
+												<div class="slideContainer">
+													<input type="range" min="10" max="500" step="5" value="30" class="slider" id="minDistInput">
+													<span>Minimum Distance: </span><span id="minDistValue">30</span> <span>meters</span>
+				
+													<input type="range" min="100" max="5000" step="5" value="300" class="slider" id="maxDistInput">
+													<span>Maximum Distance: </span><span id="maxDistValue">300</span> <span>meters</span>
+
+													<!-- Keep unmasked: <input type="checkbox" id="myCheck1" value="unmask">   -->
+												</div>
+											</div>
+											<button style="margin: 0.5rem 0 .5rem 0; width: 50%;" id="mask">Mask My XYZ!</button><br> 
+											
+											<button style="margin: 0.5rem 0 .5rem 0; width: 50%;" id="bin">Bin Locations!</button><br>
+
+											<!-- <button style="margin: 0.5rem 0 .5rem 0; width: 50%;" id="skipMask">Skip masking!</button><br> -->
+											<button type="button" class="action-button previous previous_button">Back</button>
+											<button type="button" class="next action-button">Continue</button>  
+										</fieldset>									
+										<fieldset>
+											<!-- <h3>Encryption</h3>											 -->
+												<!-- <h4>Strong Memorable Passphrase Generator</h4> -->
+												<!-- 23-10-2021. If it is a document, we present these options.
+																 If user chooses not to encrypt the document, we generate passphrase and encrypt  -->
+												<div id="ChooseToEncrypt" class="tabcontent">											
+													 Choose To Encrypt (option will be shown only for Documents)
+													  	  <input type="radio" id="encryptYes" 	name="to_encrypt" value="1" checked="checked" >  <label for="encryptYes">Yes</label>
+														  <input type="radio" id="encryptNo" 	name="to_encrypt" value="2">  <label for="encryptNo">No</label>														  
+														  <br> </br>													
+												</div>
+												<div id="encryptionOption">
+													<p>Here you can encrypt the masked data.
+														Use the passphrase generator to select a passphrase. Please keep it safely.
+													<span><button id=genBut onclick="populateform(15)" >Generate passphrase</button> <button id=copyBut>📋</button></span>
+
+													<br>	<code><output id=passphraseOutput>████████████████████████████</output></code>
+														<!--							<p>Enter final Passphrase for encryption: 	<input id=txtEncpassphrase type=text  value=''>  </p>  -->
+													<p>
+														
+													<div id="dwnEncrypted"> <button style="margin: 1rem 0 0 0; width: 100%;" id="downloadEncrypted">Download Encrypted Data</button></a></div>
+													<div>
+														<a id=aEncsavefile hidden><button>Save Encrypted File</button></a>													
+														<a id=download_wholezip hidden><button>Save Entire Zip File</button></a>
+													</div>
+												</div> 
+											<button type="button" class="action-button previous previous_button">Back</button>
+											<button type="button" class="next action-button">Continue</button> 
+										</fieldset>	
+										<fieldset>
+											<!-- <h3>Notarisation</h3> -->											
+											<p>The cyptographic hash value of the sensitive map data can be used to uniquely identify it and prove it has been modified.
+												This hash value can be stored and shared securely.
+												
+												<span><button id=genHashBut onclick="display_hash()"> Display encrypted map file hash</button><code><output id=hashOutput>████████████████████████████</output></code><button id=copyHashBut>📋</button></span>	
+													
+					<!--							<div id="dwnHashed"> <button style="margin: 1rem 0 0 0; width: 100%;" id="downloadHashed">Download Hash of Encrypted Map File</button></a></div>-->
+					<!--							<script>-->
+					<!--								$("#downloadHashed").on("click", function () {-->
+					<!--									//savehash();  //hash(decryptedData);-->
+					<!--									download_hash();-->
+					<!--								});	-->
+					<!--							</script>							-->
+												
+											<!-- The Blockchain code-->
+											<div id="root"></div>
+											
+											<button id='print-btn'>Start print transaction</button> 
+
+											<button type="button" class="action-button previous previous_button">Back</button>
+											<a href="#" class="action-button">Finish</a>
+										</fieldset>										 									
+								</div>  
+								</section>							
+						<!-- End Horizontal Flow Code -->
+						
+
+						<!-- Donut Masking -->
+						<article id="dm">
+
+							<div style="display: none;" id="infoDiv">
+
+								<div class="slideContainer">
+									<input type="range" min="50" max="10000" step="50" value="500" class="slider" id="bandwidth">
+									<span>Maximum Cluster Distance: <span id="sliderValue"></span> meters</span> <span class="icon fa-info-circle tooltip"><span class="tooltiptext">This value adjusts the distance used by the DBSCAN algorithm to detect clusters. DBSCAN is both complicated and <i>very</i> sensitive to this distance value, so don't use this to try and detect real, meaningful clusters in your data. Instead, play around with the value, see how it affects cluster detection until you find a value that you think looks reasonable, and use it for <i>exploring</i> how masking changes the distribution of your data and some of the <i>potential</i> clusters within it.</span></span>
+								</div>
+								<br>
+								<strong id="clusterReport">Number of Clusters Detected</strong> <span class="icon fa-info-circle tooltip"><span class="tooltiptext">Points that form clusters are represented in bold on the map. Ideally the number and location of clusters before and after masking are similar.</span></span><br>
+								<span id="beforeMasking">Before Masking: </span><br>
+								<span id="afterMasking">After Masking: </span><br>
+								<span id="addLoss">Clusters Lost or Added: </span><br>
+								<br>
+							</div>
+							<br>
+							<div id="map" style="height:50vh;"></div>
+							<br>
+							<button style="margin: 0.5rem 0 .5rem 0; width: 70%;" id="downloadMasked">Download Masked Data</button>
+							<button style="margin: 0.5rem 0 .5rem 0; width: 23%;" id="clear">Clear All</button>
+
+							<script>
+								//Set a bunch of variables based on user input
+								var bandwidth = document.getElementById("bandwidth");
+								var output = document.getElementById("sliderValue");
+								var minDistInput = document.getElementById("minDistInput");
+								var minDistValue = document.getElementById("minDistValue");
+								var maxDistInput = document.getElementById("maxDistInput");
+								var maxDistValue = document.getElementById("maxDistValue");
+
+								//This section just edits the values so that the sliders work
+								clustersEnabled = false;
+								output.innerHTML = bandwidth.value;
+								bandwidth.oninput = function() {
+									output.innerHTML = this.value;
+								}
+								minDistInput.oninput = function() {
+									minDistValue.innerHTML = this.value;
+								}
+								maxDistInput.oninput = function() {
+									maxDistValue.innerHTML = this.value;
+								}
+
+								//can we delete this?
+								function myfunction(){
+									console.log("hello");
+									$("#encdirectly").show();
+								}
+
+								
+
+								//Enables the cluster detection tools
+								$("#enableInfoLoss").click(function(){
+									clustersEnabled = true;
+									$("#infoDiv").show();
+									$(".slideContainer").show();
+								});
+
+								//The Map!
+								var map = new ol.Map({
+									target: 'map',
+									layers: [
+										new ol.layer.Tile({
+											source: new ol.source.XYZ({
+												url:'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',
+											})
+										})
+									],
+									view: new ol.View({
+										center: ol.proj.fromLonLat([-100, 45]),
+										zoom: 3,
+										maxZoom: 13
+									})
+								});
+
+								//Download button, defines the options for shpwrite and then triggers the download. Also loads the citation page upon click
+								$("#downloadMasked").on("click", function () {
+									//$("#citation").load();
+									var options = {
+										folder: 'MaskedData',
+										types: {
+											point: 'MaskedPoints',
+										}
+									}
+									console.log("Console: here 1");
+									shpwrite.download(masked.reprojected, options);
+								});
+
+								//Trigger functions based on user input from buttons
+								$("#sensitiveInput").change(function(){
+									console.log('here 0a sensitive.data: ' + sensitive.data)		
+									console.log('here 0a sensitiveMed.data: ' + sensitiveMed.data)
+									loadShapeFile("sensitiveInput", "sensitiveTag", "sensitive") //,
+									//loadShapeFile("sensitiveInput", "sensitiveTag", "sensitiveMed")
+									console.log('here 0b sensitive.data: ' + sensitive.data)		
+									console.log('here 0b sensitiveMed.data: ' + sensitiveMed.data)
+								});
+								$("#boundaryInput").change(function(){
+									loadShapeFile("boundaryInput", "boundaryTag", "boundary")}
+								);
+								$("#display23").click(function(){
+									toMap(sensitive.data, sensitive.style)
+									//, 
+									//toMap(boundary.data, boundary.style)
+									}
+								);
+								$("#mask").click(function(){	
+									xyz.displace("sensitive", "masked"), //"sensitiveMed", "maskedMed","sensitiveCoarse", "maskedCoarse"),									
+											toMap(sensitive.data, sensitive.style),
+											toMap(masked.data, masked.style),
+											toMap(sensitiveClusters.cluster, sensitiveClusters.style),
+											toMap(maskedClusters.cluster, maskedClusters.style)							
+									}
+								);
+								//14-11-2021 ..h3 binning
+								$("#bin").click(function(){										
+									sensitive = h3binning(sensitive)
+									
+ //       							const feature = geojson2h3.h3SetToFeature(hexagons);
+        							// -> {type: 'Feature', properties: {}, geometry: {type: 'Polygon', coordinates: 
+									
+//									toMap(sensitive.data, sensitive.style)
+									}
+								);
+								$("#clear").click(function(){
+									location.reload()}
+								);
+								//added 02-oct-2021
+								$("#encryptedInput").change(function(){
+									//console.log("Console: here 176");
+									//showZippedFileContents("encryptedInput")
+								});
+								//09-11-2021..print receipt
+								$("#print-btn").click(function(){
+									console.log("Console: print receipt here 23");
+									saveReceipt()
+								});
+
+								//23-10-2021...document encyption option
+								$(document).ready(function() {
+									$("input[name$='to_encrypt']").click(function() {
+										//console.log("Console: here 187");
+										var test = $(this).val();
+										if(test == 1 ){
+											//console.log("test == 1 ");
+											$("#encryptionOption").show();
+											$("#dwnEncrypted").show();											
+										}
+										else {
+											//console.log("test == 2 ");
+											$("#encryptionOption").hide();
+											$("#dwnEncrypted").hide();
+											//$("div.encryptionOption").hide();
+											//$("div.dwnEncrypted").hide();											
+										}
+									});
+								});
+
+							</script>
+						</article>
+
+						<!-- Background -->
+						<div id="bg"></div>
+
+						<!-- Tags for injecting geoJSON data -->
+						<script id="sensitiveTag"></script>
+						<script id="boundaryTag"></script>
+					</div>
+					</section>
+
+				<!-- Two -->
+					<section id="two" class="wrapper style3 fade-up">
+						<div class="inner">
+							<h2>
+								<!-- <p class="step-icon"><span>1</span></p> -->
+								<span class="step-text">Verification</span>
+							</h2>	
+
+							<script>
+								// generate passphrase on page load
+								addEventListener('DOMContentLoaded', function() {
+									/* 23-july 2021
+									computepw();
+									genBut.addEventListener('click', computepw);
+									*/
+									//new passphrase generator
+									//Calling initialiseArray() function: 
+									initialiseArray();
+									//copy the passphrase
+									copyBut.addEventListener('click', copypw);
+									copyHashBut.addEventListener('click', copyHash);									
+								});
+							</script>
+							
+							<div class="centerDiv">								
+								  <section class="multi_step_form">  
+									<div id="msform"> 									  
+									  <ul id="progressbar2">
+										<li class="active">Upload Encrypted Volume</li>										
+										<li>Decrypt</li>
+										<li>Verify</li>
+									  </ul>									  									
+										  <fieldset>
+											  <div>												  
+													  <span class="tooltiptext">Load your zipped encrypted file for decryption.</a> </span></span><br>												  
+												  <input type="file" id="encryptedInput" onchange='openFile(event)' accept=".enc" >
+											  </div><br>											 
+											  <button type="button" id= "secondNextAction-button" class="next action-button">Continue</button>  
+										  </fieldset>
+										  <fieldset>
+											  <div id="ChooseVolumeToDecrypt" class="tabcontent">												
+													    <input type="radio" id="coarse" 		name="vol_decrypt" value="3">    	<label for="coarse">Coarse</label>
+													    <input type="radio" id="medium" 		name="vol_decrypt" value="2">	    <label for="medium">Medium</label>
+													    <input type="radio" id="fine"           name="vol_decrypt" value="1">   	<label for="fine"> Fine</label>
+														<br> </br>
+											   </div>											   
+
+												<p><strong>Enter passphrase (the 5 words for coarse level, 10 for medium and 15 for fine)</strong>
+													<input id=txtDecpassphrase type=text  value=''>																										
+			
+												<div id="dwnDecrypted"> <button style="margin: 1rem 0 0 0; width: 100%;" id="downloadDecrypted">Download Decrypted Data</button></a></div>
+			
+												<div>
+													<a id=aDecsavefile hidden><button>Save Decrypted File</button></a>
+												</div>
+
+											  <button type="button" class="action-button previous previous_button">Back</button>
+											  <button type="button" class="next action-button">Continue</button> 
+										  </fieldset>										  										 									
+								  </div>   
+								  </section>
+								<div class="div2">
+									<!-- Here put some div that may be common to all the flow above -->
+									<div id="map" style="height:50vh;"></div>
+								</div>
+							</div>  <!-- end div centerDiv-->
+									<script>
+										//Download button, defines the options for shpwrite and then triggers the download. Also loads the citation page upon click
+										//This function is only for reference- no longer used
+										//saves both ciphertext and plaintext as a zip file.
+										//Download the encrypted data: https://stuk.github.io/jszip/
+
+										//https://github.com/Stuk/jszip/issues/311
+
+										//11-10-2021. This function is not used, the encrypted data save link is created automatically. 
+										//But should later work
+										$("#downloadEncrypted").on("click", function () {
+											console.log("Encryption: ");											
+											//document encryption											
+											if(isDocument){ //check if document
+												console.log("Document Encryption: ");
+																								
+												const reader = new FileReader()
+												reader.onload = async (event) => {
+													//document.getElementById('preview').setAttribute('src', event.target.result)
+													console.log('fileInput data2: ' + event.target.result)
+													let encryptedZipFile = encryptData2(isDocument = true, event.target.result, displayLink = true, level = 1);  //data passed is in arraybuffer format, but later should now be converted to blob again
+													encryptedZipFile.then((value) => {                            
+														encryptedZipFileData = value
+							                           	console.log('returning encryptedZipFile value 22: ' + encryptedZipFileData)														
+													});
+												}
+												reader.readAsArrayBuffer(fileInput.files[0]) //readAsText(fileInput.files[0]) //the gloabal variable 'fileInput' is used
+												return; //dont proceed further in this function, as remaining code concerns map encryption												
+											}
+
+											console.log("Map Encryption: ");
+											console.log("minDistInput: " + document.getElementById("minDistInput").value);											
+											console.log("maxDistInput: " + document.getElementById("maxDistInput").value);											
+											console.log("randDist: " + randDist + " randAngle: " + randAngle);
+
+											var mapfilename = "filename", zip_file_content = '';
+											var maskedData = JSON.stringify(masked.reprojected);
+											console.log("zip content "+ maskedData.substring(0,200)); // we can see some data
+
+											//Masked data .... add the geojson file to the zip object
+											var maskedData_string = JSON.stringify(masked.reprojected);
+											console.log("Console JSON.stringify (masked.reprojected)" + maskedData_string);
+											var plaintextbytesA = convertStringToArrayBuffer(maskedData_string); //new Uint8Array(maskedData);
+											console.log("plaintextbytes: " + plaintextbytesA);
+
+											var maskedMedData_string = JSON.stringify(maskedMed.reprojected);
+											console.log("Console JSON.stringify (maskedMedData_string)" + maskedMedData_string);
+
+											//read the above url link (line 385) for more useful functions that can be implemented, like the one below
+											//const text = await new Response(blob).text();
+
+											// 14-10-2021. No longer need masking for fine level, as we only need two levsl. So this further level is not needed.
+											//original zipper function..lets not change the contents of this function.. lets preserve this function
+//											zipper(maskedData_string); //, maskedData_string, maskedData_string); //last two are dummy values have to offest the values in the later two parameters
+											//new function...intended just to save
+											zipEncrypt(maskedData_string, maskedMedData_string);
+
+											
+										});
+										
+										//will add another file upoad here in the encryption section so users can directly come to the encyprytion section and
+										//upload their encrypted data and decrypt it.
+										$("#downloadDecrypted").on("click", function () {
+											console.log("Decryption: ");
+
+											//16-10-2021..document encryption
+											//check if document
+											  //we wont be able to know at this point if it is a document or map, 
+												//so we may include this check and the decryption as part of 
+												//the recursive decrypt procedure
+											if(isDocument){ //isDocument 												
+												console.log("Document Decryption: ");
+												const reader = new FileReader()
+												//reader.onload = handleFileLoad;
+												//not sure if the below line works
+												//console.log('fileInput data: ' + reader.readAsText(fileInput.files[0])  );
+												reader.onload = async (event) => {
+													console.log('fileInput data2: ' + event.target.result)
+													var cipherbytes=new Uint8Array(event.target.result);
+													let decrypted_file_data = await decryptData(cipherbytes, currentLevel = 1, downloadFile = true); //will automatically use the 'objFile' global variable
+    												//let decryptedFile = decrypt(isDocument = true, event.target.result, displayLink = true, level = 1);  //data passed is in arraybuffer format, but later should now be converted to blob again
+								//					decrypted_file_data.then((value) => {                            
+								//						decryptedFileData = value
+							    //                       	console.log('returning decrypted file contents 24: ' + decryptedFileData)
+														//resolve(encryptedZipFileData);
+								//					});
+												}
+												reader.readAsArrayBuffer(objFile) //fileInput.files[0]) //the gloabal variable 'fileInput' is used
+												return; //dont proceed further in this function, as remaining code concerns map encryption
+											}
+											
+											console.log("Map or Document Decryption (we don't know yet): ");
+											//get level to decrypt
+											//var lev = document.getElementsByName('vol_decrypt');
+											//https://stackoverflow.com/questions/15839169/how-to-get-value-of-selected-radio-button/26236365
+											var levelToDec = document.querySelector('input[name="vol_decrypt"]:checked').value;
+											console.log('level to decrypt = ' + levelToDec);
+											//for debugging, we will save all the decrypted map files at each level 
+											//var zipEnc = new JSZip();
+											//zipEnc.file("Hello.txt", "Hello World\n");
+
+											//var decryptedData = decryptData(); //will use the objFile object populated with the openFile function
+											// 02-10-2021..we now go through the verification steps and then will call the decrypt function
+											//var decryptedData = verifyDecryptUnzip('coarse');
+											//objFile parameter has already been read in, last parameter just adds files to the zip
+											var decryptedData = recursiveDecrypt(objFile, levelToDec, 3); //levelToDecrypt,currentLevel -
+											
+										});
+
+									</script>
+						</div>   <!-- end div inner-->
+                    </section>
+
+                <!-- Three -->
+					<section id="three" class="wrapper style3 spotlights">
+												
+					</section>
+
+					<section id="four" class="wrapper style3 fade-up">						
+											
+					</section>
+
+			</div>
+
+{% endblock %}
+

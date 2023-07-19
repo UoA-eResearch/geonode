@@ -1,0 +1,152 @@
+{% load dialogos_tags %}
+{% load pagination_tags %}
+{% load bootstrap_tags %}
+{% load i18n %}
+{% load avatar_tags %}
+
+{% load i18n %}
+
+<!-- <h1>Verification</h1> -->
+<!-- <h1>Verification</h1> -->
+  <!--<script type="text/javascript"> -->
+  <script type="text/javascript">
+    //will add another file upoad here in the encryption section so users can directly come to the encyprytion section and
+    //upload their encrypted data and decrypt it.
+    
+    //this is the function that will be called when the user clicks the download decrypted button
+    //this fuction is just to test of our file upload for decryption works on this page
+    function downloadDecrypted_uploadedFile() {
+          console.log("downloadDecrypted_upladedFile: ");
+          console.log("Map or Document Decryption (we don't know yet): ");
+          //get level to decrypt
+          //var lev = document.getElementsByName('vol_decrypt');
+          //https://stackoverflow.com/questions/15839169/how-to-get-value-of-selected-radio-button/26236365
+          var levelToDec = document.querySelector('input[name="vol_decrypt"]:checked').value;
+          console.log('level to decrypt = ' + levelToDec);
+         
+          //objFile parameter has already been read in, last parameter just adds files to the zip
+          var decryptedData = recursiveDecrypt(objFile, levelToDec, 3); //levelToDecrypt,currentLevel           
+		}
+
+    //this is the function that will be called when the user clicks the download decrypted button
+    //this function will first fetch the file from the geonode repo and then decryt it 
+    function downloadDecrypted() {
+      console.log("Decryption: ");
+      
+      var levelToDec = document.querySelector('input[name="vol_decrypt"]:checked').value;
+      console.log('level to decrypt = ' + levelToDec);
+
+      if (levelToDec === null)
+        levelToDec = 1;   //decrypt to the deepest level (3 being the outermost)
+
+      console.log("Fetching the encrypted zipped file stored as a geonode document ");
+      
+      fetch($("ul.list-unstyled a[href^='/documents/']")[0].href + "/download")
+        //.then(r => r.text()) // r is a blob, r.text() is a Promise which returns the text of the blob file
+        .then(r => r.blob()) 
+          .then(body =>              
+              callFunction(body, levelToDec)    //`body' is in string format --- of the encrypted zipped file
+              //console.log('encrypted zipped file contents' + body)        
+          )
+              //console.log('encrypted zipped file contents' + body)
+              //const blob = new Blob([new Uint8Array(arrayBuffer)], {type: file.type });
+              //if we upload an encrypted file, then the objFile parameter has already been read in, 
+              //but in this case we just use the encrypted zip file as file object     
+              //levelToDecrypt,currentLevel. Because its a recursive function, an additional 'currentlevel' parameter is needed.
+
+              
+              /*              
+              file.arrayBuffer().then((arrayBuffer) => {
+                  const blob = new Blob([new Uint8Array(arrayBuffer)], {type: file.type });
+                  console.log(blob);
+              }); 
+              */
+
+              //var decryptedData = recursiveDecrypt(objFile, levelToDec, 3);
+              //recursiveDecrypt(body, levelToDec, 3)              
+              
+          
+      //console.log("Map or Document Decryption (we don't know yet): ");
+      //get level to decrypt
+      //var lev = document.getElementsByName('vol_decrypt');
+      //https://stackoverflow.com/questions/15839169/how-to-get-value-of-selected-radio-button/26236365
+    //)
+    }
+    
+    function callFunction(fileContentAsString, v_levelToDec){
+        console.log('Inside callFunction()');
+        /*
+        const fr = new FileReader()
+        //const file = document.querySelector("input[name='images[]']").files[0]
+        fr.readAsArrayBuffer(v_file)
+        fr.onload = function() {
+            // you can keep blob or save blob to another position
+            const blob = new Blob([fr.result])
+           
+        }
+        */
+        /* file.arrayBuffer().then((arrayBuffer) => {
+             const blob = new Blob([new Uint8Array(arrayBuffer)], {type: file.type });
+             console.log(blob);
+        }); */ 
+
+        var fileStringArray = [fileContentAsString];
+        var blobAttrs = {
+          type: "application/zip" //"text/plain"
+        };
+        var filename = "encrypted_file.zip.enc";
+        //var file = new File(fileStringArray, filename, blobAttrs);
+        //var blob = new Blob([fileContentAsString], { type: 'application/zip' });
+        console.log('Calling recursiveDecrypt() function with blob argument');
+        //var file = new File(fileContentAsString, filename, blobAttrs);
+        var file = new File([fileContentAsString], filename);
+        recursiveDecrypt(fileContentAsString, v_levelToDec, 3);  //file //blob //fileContentAsString
+    } 
+
+  </script>
+
+
+<div> 
+          
+</div>  
+<!-- <br> -->	
+
+        <!-- <button type="button" id= "secondNextAction-button" class="next action-button">Continue</button>  -->
+      
+        <div>
+          <!-- <span>Load the data you want to mask: </span><span class="icon fa-info-circle tooltip"> -->
+            <span class="tooltiptext">Load your zipped encrypted file for decryption.</a> </span></span><br>
+          <!-- <input type="file" id="encryptedInput" action="all_clusters_kamloops.zip" accept=".zip"> -->
+                              <!-- 19-10-21. The filevalidation function is also called fom inside the openFile function  -->
+          <input type="file" id="encryptedInput" onchange='openFile(event)' accept=".enc" >
+        </div><br>
+
+        <h4>Choose Volume To Decrypt</h4>
+      
+        <div id="ChooseVolumeToDecrypt" class="tabcontent">												
+              <input type="radio" id="coarse" 		name="vol_decrypt" value="3">    	<label for="coarse">Coarse</label>
+              <input type="radio" id="medium" 		name="vol_decrypt" value="2">	    <label for="medium">Medium</label>
+              <input type="radio" id="fine"       name="vol_decrypt" value="1">   	<label for="fine"> Fine</label>
+            <br> </br>
+        </div>											   
+
+        <p><strong>Enter passphrase (the 5 words for coarse level, 10 for medium and 15 for fine)</strong>
+        
+          <input id=txtDecpassphrase type=text  size=85 value=''>																										
+         <br> </br>
+        <!-- <div id="dwnDecrypted"> <button style="margin: 1rem 0 0 0; width: 30%;" id="downloadDecrypted">Download Decrypted Data</button></a></div> -->
+          <!-- <input type="button" value="Download Decrypted Data" onclick="downloadDecrypted()"/>  --> 
+          <button id="genBut" style="margin: 0.5rem 0 .5rem 0; width: 30%;" onclick="downloadDecrypted_uploadedFile()" class="buttondss buttondss6">Download Decrypted Layer</button>
+
+          <!-- <button type="button" id="firstskipaction-button" class="skip action-button">Download Decrypted Data</button>  -->
+          <br> </br>
+          Which button looks better?
+          <br> </br>
+          <button style="margin: 0.5rem 0 .5rem 0; width: 45%;" id="download-geonode-button" onclick="downloadDecrypted()" class="buttondss buttondss4">Download Decrypted Data</button>
+
+        <div>
+          <a id=aDecsavefile hidden><button>Save Decrypted File</button></a>
+        </div>
+
+
+

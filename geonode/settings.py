@@ -608,7 +608,7 @@ except ValueError:
         'bm', 'bmp', 'dwg', 'dxf', 'fif', 'gif', 'jpg', 'jpe', 'jpeg', 'png', 'tif',
         'tiff', 'pbm', 'odp', 'ppt', 'pptx', 'pdf', 'tar', 'tgz', 'rar', 'gz', '7z',
         'zip', 'aif', 'aifc', 'aiff', 'au', 'mp3', 'mpga', 'wav', 'afl', 'avi', 'avs',
-        'fli', 'mp2', 'mp4', 'mpg', 'ogg', 'webm', '3gp', 'flv', 'vdo'
+        'fli', 'mp2', 'mp4', 'mpg', 'ogg', 'webm', '3gp', 'flv', 'vdo', 'enc', 'json' , 'geojson'
     ] if os.getenv('ALLOWED_DOCUMENT_TYPES') is None \
         else re.split(r' *[,|:|;] *', os.getenv('ALLOWED_DOCUMENT_TYPES'))
 
@@ -628,6 +628,7 @@ if UNOCONV_ENABLE:
     UNOCONV_EXECUTABLE = os.getenv('UNOCONV_EXECUTABLE', '/usr/bin/unoconv')
     UNOCONV_TIMEOUT = int(os.getenv('UNOCONV_TIMEOUT', 30))  # seconds
 
+# /home/ubuntu/my_geonode/djangoerror.log
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -655,15 +656,20 @@ LOGGING = {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler',
+        },
+        'logfile': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': 'djangoerror.log',
         }
     },
     "loggers": {
         "django": {
-            "handlers": ["console"], "level": "ERROR", },
+            "handlers": ["logfile"], "level": "ERROR", },
         "geonode": {
-            "handlers": ["console"], "level": "ERROR", },
+            "handlers": ["logfile"], "level": "ERROR", },
         "geoserver-restconfig.catalog": {
-            "handlers": ["console"], "level": "ERROR", },
+            "handlers": ["logfile"], "level": "ERROR", },
         "owslib": {
             "handlers": ["console"], "level": "ERROR", },
         "pycsw": {
@@ -1159,6 +1165,7 @@ DATETIME_INPUT_FORMATS = DATETIME_INPUT_FORMATS + _DATETIME_INPUT_FORMATS
 
 DISPLAY_SOCIAL = ast.literal_eval(os.getenv('DISPLAY_SOCIAL', 'True'))
 DISPLAY_COMMENTS = ast.literal_eval(os.getenv('DISPLAY_COMMENTS', 'True'))
+DISPLAY_VERIFICATION = ast.literal_eval(os.getenv('DISPLAY_VERIFICATION', 'True'))
 DISPLAY_RATINGS = ast.literal_eval(os.getenv('DISPLAY_RATINGS', 'True'))
 DISPLAY_WMS_LINKS = ast.literal_eval(os.getenv('DISPLAY_WMS_LINKS', 'True'))
 
@@ -2137,3 +2144,33 @@ UI_DEFAULT_MANDATORY_FIELDS = [
     'id_resource-restriction_code_type'
 ]
 UI_REQUIRED_FIELDS = ast.literal_eval(os.getenv('UI_REQUIRED_FIELDS ', '[]'))
+
+#debug_toolbar settings
+if DEBUG:
+    INTERNAL_IPS = ('127.0.0.1',)
+    MIDDLEWARE_CLASSES += (
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    )
+
+    INSTALLED_APPS += (
+        'debug_toolbar',
+    )
+
+    DEBUG_TOOLBAR_PANELS = [
+        'debug_toolbar.panels.versions.VersionsPanel',
+        'debug_toolbar.panels.timer.TimerPanel',
+        'debug_toolbar.panels.settings.SettingsPanel',
+        'debug_toolbar.panels.headers.HeadersPanel',
+        'debug_toolbar.panels.request.RequestPanel',
+        'debug_toolbar.panels.sql.SQLPanel',
+        'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+        'debug_toolbar.panels.templates.TemplatesPanel',
+        'debug_toolbar.panels.cache.CachePanel',
+        'debug_toolbar.panels.signals.SignalsPanel',
+        'debug_toolbar.panels.logging.LoggingPanel',
+        'debug_toolbar.panels.redirects.RedirectsPanel',
+    ]
+
+    DEBUG_TOOLBAR_CONFIG = {
+        'INTERCEPT_REDIRECTS': False,
+    }

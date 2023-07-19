@@ -409,6 +409,12 @@ class ResourceBaseForm(TranslationModelForm):
         label=_('Supplemental information'),
         required=False,
         widget=TinyMCE())
+    ## added code 8th Juky 2023
+    notarisation_url = forms.CharField(
+        label=_('Notarisation URL'),
+        required=False,
+        widget=TinyMCE())
+        #widget=forms.HiddenInput())
     data_quality_statement = forms.CharField(
         label=_("Data quality statement"),
         required=False,

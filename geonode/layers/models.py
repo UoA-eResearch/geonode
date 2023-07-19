@@ -192,6 +192,9 @@ class Layer(ResourceBase):
 
     charset = models.CharField(max_length=255, default='UTF-8')
 
+    # added code 8th Juky 2023
+    notarisation_url = models.CharField(max_length=2048, default='') 
+
     upload_session = models.ForeignKey(UploadSession, blank=True, null=True, on_delete=models.CASCADE)
 
     use_featureinfo_custom_template = models.BooleanField(

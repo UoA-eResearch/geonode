@@ -97,6 +97,8 @@ urlpatterns += [
 
     # Layer views
     url(r'^layers/', include('geonode.layers.urls')),
+    
+    #url(r'^helloapp/', include('geonode.layers.urls')),
 
     # Remote Services views
     url(r'^services/', include('geonode.services.urls')),

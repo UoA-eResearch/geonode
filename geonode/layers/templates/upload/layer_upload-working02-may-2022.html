@@ -1,0 +1,847 @@
+{% extends "upload/layer_upload_base.html" %}
+
+{% load i18n %}
+{% load base_tags %}
+{% load staticfiles %} 
+
+{% load static %}
+{% load floppyforms %}
+
+<script type="text/javascript">
+    // this is used by thumbnail.js to POST to the thumbnail update view
+    window.thumbnailUpdateUrl = '{% url 'layers-set-thumb-from-bbox' resource.id %}';
+</script>
+<!--<link href="{% static "lib/css/bootstrap-select.css" %}" rel="stylesheet" />-->
+<script type="text/javascript" src="{% static "geonode/js/utils/thumbnail.js" %}"></script>
+
+<!-- Required to make select2 fields work for autocomplete -->
+<link href="{% static "vendor/select2/dist/css/select2.css" %}" type="text/css" media="screen" rel="stylesheet" />
+<link href="{% static "autocomplete_light/select2.css" %}" type="text/css" media="screen" rel="stylesheet" />
+
+<script type="text/javascript" src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/jquery.init.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/select2/dist/js/select2.full.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/select2/dist/js/i18n/en.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/autocomplete.init.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/forward.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/select2.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/jquery.post-setup.js" %}"></script>
+
+{% block title %} {% trans "Upload Layer"  %} - {{ block.super }}  {% endblock %}
+
+{% block body_class %}layers upload{% endblock %}
+
+
+{% block head %}
+
+{{ block.super }}
+{% endblock %}
+
+{% block body_outer %}
+ 
+<div class="page-header">
+  <a href="{% url "layer_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}" class="btn btn-primary pull-right">{% trans "Explore Layers" %}</a>
+  <h2 class="page-title">{% trans "Upload Layers" %}</h2>
+
+  <script language="javascript">
+    //28-11-2021. For displaying option for data sovereignty tools
+    function showMe(box) {
+      var chboxs = document.getElementsByName("c1");
+      var vis = "none";
+      for(var i=0;i<chboxs.length;i++) { 
+          if(chboxs[i].checked){
+          vis = "block";
+              break;
+          }
+      }
+      document.getElementById(box).style.display = vis;
+
+      //let scriptUrl = 'https://mapsafe.locative.dev/assets/js/passphrase.js'
+      //loadScript(scriptUrl);
+    }
+
+    //async function loadScript(url) {
+    //  let response = await fetch(url);
+    //  let script = await response.text();
+    //  eval(script);
+    //}
+    
+    //document.getElementById("wrapper").style.display = "none"; 
+    $(document).ready(function() {
+      $("input[name$='to_ds']").click(function() {
+          var test = $(this).val();
+          console.log('hello 34');
+          if(test==1)
+          {  
+            //$("div.desc").hide(); .show();
+            //$(divid).fadeIn("slow");
+            $("#wrapper").fadeIn("slow");  //https://stackoverflow.com/questions/14335501/show-hide-div-with-animation  and //http://jsfiddle.net/9jtd3/
+            $("#upload-directly").fadeOut("slow");
+          }
+          else{
+            $("#wrapper").fadeOut("slow");
+            $("#upload-directly").fadeIn("slow");
+          }
+      });
+    });
+
+    var json_mosaics = [
+          {% for mosaic in mosaics %}
+            {
+                "name" : "{{mosaic.name}}",
+                "workspace" : "{{mosaic.workspace}}",
+                "is_mosaic" : "{{mosaic.is_mosaic}}",
+                "has_time" : "{{mosaic.has_time}}",
+                "has_elevation" : "{{mosaic.has_elevation}}",
+                "time_regex" : "{{mosaic.time_regex}}",
+                "elevation_regex" : "{{mosaic.elevation_regex}}"
+            },
+          {% endfor %}
+    ]
+  </script>
+
+  <script>
+		(function() {  
+        // allows users to choose to show/use the ds features
+			  $(document).ready(function() {
+				$('.vc-switch-input').on('change', function() {
+				  var isChecked = $(this).is(':checked');
+				  var selectedData;
+				  var $switchLabel = $('.vc-switch-label');
+				  console.log('isChecked: ' + isChecked); 
+				  
+				  if(isChecked) { //show the ds features
+					    //selectedData = $switchLabel.attr('data-on');  
+              $("#wrapper").fadeIn("slow");  //https://stackoverflow.com/questions/14335501/show-hide-div-with-animation  and //http://jsfiddle.net/9jtd3/
+              $("#upload-directly").fadeOut("slow");
+              map.updateSize();  //https://lists.osgeo.org/pipermail/openlayers-users/2010-March/016505.html
+				  } else {
+					    //selectedData = $switchLabel.attr('data-off');
+              $("#wrapper").fadeOut("slow");
+              $("#upload-directly").fadeIn("slow");
+				  }				  
+				  console.log('Selected data: ' + selectedData);				  
+				});
+				
+				// Params ($selector, boolean)
+				function setSwitchState(el, flag) {
+				  el.attr('checked', flag);
+				}
+				
+				// Usage
+				setSwitchState($('.switch-input'), true);    
+			  });
+			  
+			})();
+	</script>
+
+</div>
+
+<!--
+<input type="checkbox" name="c1" style="background-color:blue;" onclick="showMe('wrapper')"> Data sovereignty tools
+-->
+
+<!--
+<div id="ChooseToDS" class="tabcontent">											
+Data sovereignty tools
+      <input type="radio" id="dsYes" 	name="to_ds" value="1" >  <label for="dsYes"> <span>Yes</span> </label> 
+      <input type="radio" id="dsNo" 	name="to_ds" value="2" checked="checked">  <label for="dsNo">  <span>No</span>  </label>														        												
+</div>
+-->
+  <!--  demo https://www.cssscript.com/demo/ios-vc-toggle-switch/ 
+        https://github.com/ViniChab/VC-Toggle-Switch..         https://www.cssscript.com/ios-vc-toggle-switch/
+        https://jsbin.com/zizuxo/edit?html,css,js,console,output  <- added js functions from here
+  -->
+  <div class="vc-toggle-container">
+  Data sovereignty tools
+      <label class="vc-switch">
+        <input type="checkbox" class="vc-switch-input" />
+        <span class="vc-switch-label" data-on="Yes" data-off="No"></span>
+        <span class="vc-handle"></span>
+      </label>
+  </div>
+  
+  <!-- <button onclick="postGeoJSON()">Just Upload document and Layer</button>  -->
+
+ <!-- not needed
+  <style>
+    .mediumbutton {
+      width: 140;
+      height: 40;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #666;
+      font-size: 24px;
+      background-color: #DDD;
+      border: 3px;
+      border-color: black;
+      border-style: solid;
+    }
+  </style>
+  -->
+
+<!--
+<script src="lc_switch.js" type="text/javascript"></script>
+-->
+
+			<!-- style="display:none" style="background-color:lightblue;" 
+      style="background-color:#B7E9F7; border-radius:10px;"
+      -->
+<div id="wrapper" style="border-radius:10px; display: none;" class="inner"  >
+
+   {% comment %} <span><button id=genBut onclick="populateform(15)" >Generate passphrase</button> <button id=copyBut>📋</button></span>
+   <br>	<code><output id=passphraseOutput>████████████████████████████</output></code> {% endcomment %}
+
+  <div id="output"></div>
+
+    <!--  Start Horizontal Flow Code End 14-Sep-2021 -->
+    <!-- Start Multiform HTML https://www.geeksforgeeks.org/how-to-create-multi-step-progress-bar-using-bootstrap/ --> 
+  <section class="multi_step_form">  
+  <div id="msform"> 
+    <!-- <span>In order to use this service/safeguard you map, you have to complete the steps in this process</span> -->
+    <ul id="progressbar">
+      <li class="active">Upload Data</li>
+      <li>Display</li>
+      <li>Masking</li>
+      <li>Encryption</li>
+      <li>Notarisation</li> 
+      <!-- <li>Encrypt</li> -->
+    </ul>									
+      <fieldset>
+        <div>
+          <!-- <span>Load the data you want to mask: </span><span class="icon fa-info-circle tooltip"> -->
+            <span class="tooltiptext">Load your sensitive data. Documents or maps in zipped shapefile format. You can use sample map <a style="color: #f3eadb;" href="all_clusters_kamloops.zip"> data.</a> </span></span><br>
+                                                                                <!--    -->
+            <input type="file" id="sensitiveInput" action="all_clusters_kamloops.zip" onchange="return fileValidation(1)" >  
+            <!-- accept=".zip" -->
+        </div><br>
+        <!-- <button type="button" class="action-button previous_button">Back</button> -->
+        <!-- <button type="button" id= "display23" class="next action-button" >Display</button> -->
+        <button type="button" id= "firstnextaction-button" class="next action-button" disabled >Continue</button> 
+        <button type="button" id= "firstskipaction-button" class="skip action-button">Skip</button>  
+        
+      </fieldset>
+      <fieldset>
+        <!--
+        <div id="Displaying" class="tabcontent">											
+          <div> 
+            <button style="margin: 1rem 0 0 0; width: 100%; color: black;" id="display22" class="buttonInline"> <span> Display the uploaded data </span> </button>
+          </div>
+        </div> 
+        -->
+
+      <div class="input-group2"> 
+        <div class="custom-file2">
+          <!-- <input type="file" class="custom-file-input2" id="upload"> -->
+          
+            <!--<label class="custom-file-label2" for="upload"><i class="ion-android-cloud-outline"></i>Choose file</label> -->
+            <!--  class="custom-file-label2"  -->
+           <!-- <button class="buttondss buttondss2" id="display21">  Display Data  </button>
+           <button class="buttondss buttondss3" id="display22">  Display Data  </button> -->
+           <button class="buttondss buttondss6" id="display23">  Display Data  </button>
+           <!-- <input name="submit" type="submit" class="mediumbutton" value="Submit"> -->
+           <p>
+        </div>
+      </div>
+
+        <button type="button" class="buttondss5">Back</button>
+        <button type="button" class="next action-button">Continue</button>             
+      </fieldset>  
+      <fieldset>
+        <div>
+        <!-- The first step is safeguarding is masking you maps. The -->
+          Masking hides original locations with random locations within a certain distance. 
+            
+          <span><strong>Distance</strong>: set the minimum and maximum distance in meters that any given point will move: </span> <span class="icon fa-info-circle tooltip"><span class="tooltiptext"></span></span>
+          <br>
+          <div class="slideContainer">
+            <span> <input type="range" min="10" max="500" step="5" value="30" class="slider" id="minDistInput">
+            Minimum Distance: </span><span id="minDistValue">30 meters </span>
+
+            <span> <input type="range" min="100" max="5000" step="5" value="300" class="slider" id="maxDistInput">
+            Maximum Distance: </span><span id="maxDistValue"> 300 meters</span>
+
+            <!-- Keep unmasked: <input type="checkbox" id="myCheck1" value="unmask">   -->
+          </div>
+        </div>
+        <!-- <button style="margin: 0.5rem 0 .5rem 0; width: 50%;" id="mask" class="buttondss buttondss6">Calculate Mask!  </button><br>  -->
+        
+        <!-- from the  -->
+        <button style="margin: 0.5rem 0 .5rem 0; width: 35%;" id="mask" class="buttondss buttondss6">Calculate Mask!  </button>
+        <button style="margin: 0.5rem 0 .5rem 0; width: 35%;" id="downloadMasked" class="buttondss buttondss4" >Download Masked Data</button>
+        <button style="margin: 0.5rem 0 .5rem 0; width: 20%;" id="clear" class="buttondss buttondss4" >Clear All</button>
+
+        <!-- <button style="margin: 0.5rem 0 .5rem 0; width: 50%;" id="bin">Bin Locations!</button><br>  -->
+
+        <!-- <button style="margin: 0.5rem 0 .5rem 0; width: 50%;" id="skipMask">Skip masking!</button><br> -->
+        <button type="button" class="buttondss5">Back</button>
+        <button type="button" class="next action-button">Continue</button>  
+      </fieldset>									
+      <fieldset>
+        <!-- <h3>Encryption</h3>											 -->
+          <!-- <h4>Strong Memorable Passphrase Generator</h4> -->
+          <!-- 23-10-2021. If it is a document, we present these options.
+                    If user chooses not to encrypt the document, we generate passphrase and encrypt  -->
+          <div id="ChooseToEncrypt" class="tabcontent">											
+              Choose To Encrypt (option will be shown only for Documents)
+                  <input type="radio" id="encryptYes" 	name="to_encrypt" value="1" checked="checked" >  <label for="encryptYes">Yes</label>
+                <input type="radio" id="encryptNo" 	name="to_encrypt" value="2">  <label for="encryptNo">No</label>														  
+                <br> </br>													
+          </div>
+          <div id="encryptionOption">
+            <p>Here you can encrypt the masked data.
+              Use the passphrase generator to select a passphrase. Please keep it safely.
+              <p>
+            <button id=genBut style="margin: 0.5rem 0 .5rem 0; width: 23%;" onclick="populateform(15)" class="buttondss buttondss6" >Generate passphrase</button> <button id=copyBut>📋</button>
+
+            <br>	<code><output id=passphraseOutput>████████████████████████████</output></code>
+              <!--							<p>Enter final Passphrase for encryption: 	<input id=txtEncpassphrase type=text  value=''>  </p>  -->
+            <p>
+                                                                                                               <!--   class="buttonInline" -->
+            <!-- <div id="dwnEncrypted"> <button style="margin: 1rem 0 0 0; width: 100%;" id="downloadEncrypted" class="buttondss buttondss4" >Download encrypted file</button></a></div>
+            -->
+            <span>
+                <button style="margin: 0.5rem 0 .5rem 0; width: 45%;" id="downloadEncrypted" class="buttondss buttondss4" >Encrypt and Download file</button>
+                <button style="margin: 0.5rem 0 .5rem 0; width: 45%;" id="upload-geonode-button" class="buttondss buttondss4" >Upload file</button>
+              </span>
+            
+            <div>
+              <a id=aEncsavefile hidden><button>Save Encrypted File</button></a>													
+              <a id=download_wholezip hidden><button>Save Entire Zip File</button></a>
+            </div>
+
+            
+
+          </div> 
+        <button type="button" class="action-button previous previous_button">Back</button>
+        <button type="button" class="next action-button">Continue</button> 
+      </fieldset>	
+      <fieldset>
+        <!-- <h3>Notarisation</h3> -->											
+        <p>The cyptographic hash value of the encrypted sensitive map file can be used to uniquely identify it and prove if it has been modified.
+          This value can be stored and shared securely.
+          <p>
+          <span><button id=genHashBut class="buttondss buttondss6" onclick="display_hash()"> Display hash</button> <code><output id=hashOutput>████████████████████████████</output></code><button id=copyHashBut>📋</button></span>	
+            
+
+        <p>Choose to store this hash value stored securely in the Ethereum blockchain.  
+        <!-- The Blockchain code-->
+        <div id="root"></div>
+        
+        <!-- <button id='print-btn'>Start print transaction</button>  -->
+
+        <button type="button" class="action-button previous previous_button">Back</button>
+        <a href="#" class="action-button">Finish</a>
+      </fieldset>										 									
+  </div>  <!-- End for id="msform" -->
+  </section>							
+<!-- End Horizontal Flow Code -->
+
+	<!-- Donut Masking -->
+    <article id="dm">
+
+      <div style="display: none;" id="infoDiv">
+
+        <div class="slideContainer">
+          <input type="range" min="50" max="10000" step="50" value="500" class="slider" id="bandwidth">
+          <span>Maximum Cluster Distance: <span id="sliderValue"></span> meters</span> <span class="icon fa-info-circle tooltip"><span class="tooltiptext">This value adjusts the distance used by the DBSCAN algorithm to detect clusters. DBSCAN is both complicated and <i>very</i> sensitive to this distance value, so don't use this to try and detect real, meaningful clusters in your data. Instead, play around with the value, see how it affects cluster detection until you find a value that you think looks reasonable, and use it for <i>exploring</i> how masking changes the distribution of your data and some of the <i>potential</i> clusters within it.</span></span>
+        </div>
+        <br>
+        <strong id="clusterReport">Number of Clusters Detected</strong> <span class="icon fa-info-circle tooltip"><span class="tooltiptext">Points that form clusters are represented in bold on the map. Ideally the number and location of clusters before and after masking are similar.</span></span><br>
+        <span id="beforeMasking">Before Masking: </span><br>
+        <span id="afterMasking">After Masking: </span><br>
+        <span id="addLoss">Clusters Lost or Added: </span><br>
+        <br>
+      </div>
+      <br>
+      <div id="map" style="height:50vh;"></div>
+      <br>
+      <!-- shifted into the safeguarding flow, masking section
+      <button style="margin: 0.5rem 0 .5rem 0; width: 70%;" id="downloadMasked">Download Masked Data</button>
+      <button style="margin: 0.5rem 0 .5rem 0; width: 23%;" id="clear">Clear All</button>
+      -->
+
+      <script>
+        //Download button, defines the options for shpwrite and then triggers the download. Also loads the citation page upon click
+        //This function is only for reference- no longer used
+        //saves both ciphertext and plaintext as a zip file.
+        //Download the encrypted data: https://stuk.github.io/jszip/
+
+        //https://github.com/Stuk/jszip/issues/311
+        
+        var maskedData_string;  //hold the masked data as a string for passing to the postGeoJSON function
+
+        //11-10-2021. This function is not used, the encrypted data save link is created automatically. 
+        //But should later work
+        $("#downloadEncrypted").on("click", function () 
+        {
+          console.log("Encryption: ");											
+          //document encryption											
+          if(isDocument){ //check if document
+            console.log("Document Encryption: ");
+                                    
+            const reader = new FileReader()
+            reader.onload = async (event) => {
+              //document.getElementById('preview').setAttribute('src', event.target.result)
+              console.log('fileInput data2: ' + event.target.result)
+              let encryptedZipFile = encryptData2(isDocument = true, event.target.result, displayLink = true, level = 1);  //data passed is in arraybuffer format, but later should now be converted to blob again
+              encryptedZipFile.then((value) => {                            
+                encryptedZipFileData = value
+                              console.log('returning encryptedZipFile value 22: ' + encryptedZipFileData)														
+              });
+            }
+            reader.readAsArrayBuffer(fileInput.files[0]) //readAsText(fileInput.files[0]) //the gloabal variable 'fileInput' is used
+            return; //dont proceed further in this function, as remaining code concerns map encryption												
+          }
+
+          console.log("Uploaded dataset Encryption: ");
+          console.log("minDistInput: " + document.getElementById("minDistInput").value);											
+          console.log("maxDistInput: " + document.getElementById("maxDistInput").value);											
+          console.log("randDist: " + randDist + " randAngle: " + randAngle);
+
+          var mapfilename = "filename", zip_file_content = '';
+          maskedData_string = JSON.stringify(masked.reprojected);
+          console.log("zip content "+ maskedData_string.substring(0,200)); // we can see some data
+
+          //Masked data .... add the geojson file to the zip object
+          //maskedData_string = maskedData; //JSON.stringify(masked.reprojected);
+          console.log("JSON.stringify (masked.reprojected)" + maskedData_string);
+          var plaintextbytesA = convertStringToArrayBuffer(maskedData_string); //new Uint8Array(maskedData);
+          //console.log("plaintextbytes: " + plaintextbytesA);
+
+          //medium masked data
+          var maskedMedData_string = JSON.stringify(maskedMed.reprojected);
+          console.log("JSON.stringify (maskedMedData_string)" + maskedMedData_string);
+
+          //read the above url link (line 385) for more useful functions that can be implemented, like the one below
+          //const text = await new Response(blob).text();
+
+          // 14-10-2021. No longer need masking for fine level, as we only need two levsl. So this further level is not needed.
+          //original zipper function..lets not change the contents of this function.. lets preserve this function
+//											zipper(maskedData_string); //, maskedData_string, maskedData_string); //last two are dummy values have to offest the values in the later two parameters
+          //new function...intended just to save
+
+          var loading = new Loading({
+					title: 					'Data Sovereignty',
+					titleColor: 			'rgb(217, 83, 79)',
+					discription: 			'Encrypting Layer...',
+					discriptionColor: 		'rgb(77, 150, 223)',
+					animationOriginColor: 	'rgb(33, 179, 132)',
+					mask: 					true,
+					loadingPadding: 		'20px 50px',
+			    defaultApply: 	true,
+				});
+
+        zipEncrypt(maskedData_string, maskedMedData_string);
+
+        loadingOut(loading); //unload the loading animation
+          
+        });
+
+        function loadingOut(loading) {
+				   setTimeout(() => loading.out(), 1000);
+		    }
+
+        //26-01-2022
+        $("#upload-geonode-button").on("click", function () {
+          console.log("upload-geonode-button");
+          //postGeoJSON(maskedData_string);
+          upload_layer(masked.reprojected); //maskedData_string);
+        });
+        
+        //The follwng function is now moved to the _comments.html page
+        //$("#downloadDecrypted").on("click", function () {
+        
+        /*
+        //will add another file upoad here in the encryption section so users can directly come to the encyprytion section and
+        //upload their encrypted data and decrypt it.
+        $("#downloadDecrypted").on("click", function () {
+          console.log("Decryption: ");
+
+          //16-10-2021..document encryption
+          //check if document
+            //we wont be able to know at this point if it is a document or map, 
+            //so we may include this check and the decryption as part of 
+            //the recursive decrypt procedure
+          if(isDocument){ //isDocument 												
+            console.log("Document Decryption: ");
+            const reader = new FileReader()
+            //reader.onload = handleFileLoad;
+            //not sure if the below line works
+            //console.log('fileInput data: ' + reader.readAsText(fileInput.files[0])  );
+            reader.onload = async (event) => {
+              console.log('fileInput data2: ' + event.target.result)
+              var cipherbytes=new Uint8Array(event.target.result);
+              let decrypted_file_data = await decryptData(cipherbytes, currentLevel = 1, downloadFile = true); //will automatically use the 'objFile' global variable
+                //let decryptedFile = decrypt(isDocument = true, event.target.result, displayLink = true, level = 1);  //data passed is in arraybuffer format, but later should now be converted to blob again
+    //					decrypted_file_data.then((value) => {                            
+    //						decryptedFileData = value
+      //                       	console.log('returning decrypted file contents 24: ' + decryptedFileData)
+                //resolve(encryptedZipFileData);
+    //					});
+            }
+            reader.readAsArrayBuffer(objFile) //fileInput.files[0]) //the gloabal variable 'fileInput' is used
+            return; //dont proceed further in this function, as remaining code concerns map encryption
+          }
+          
+          console.log("Map or Document Decryption (we don't know yet): ");
+          //get level to decrypt
+          //var lev = document.getElementsByName('vol_decrypt');
+          //https://stackoverflow.com/questions/15839169/how-to-get-value-of-selected-radio-button/26236365
+          var levelToDec = document.querySelector('input[name="vol_decrypt"]:checked').value;
+          console.log('level to decrypt = ' + levelToDec);
+          //for debugging, we will save all the decrypted map files at each level 
+          //var zipEnc = new JSZip();
+          //zipEnc.file("Hello.txt", "Hello World\n");
+
+          //var decryptedData = decryptData(); //will use the objFile object populated with the openFile function
+          // 02-10-2021..we now go through the verification steps and then will call the decrypt function
+          //var decryptedData = verifyDecryptUnzip('coarse');
+          //objFile parameter has already been read in, last parameter just adds files to the zip
+          var decryptedData = recursiveDecrypt(objFile, levelToDec, 3); //levelToDecrypt,currentLevel -
+          
+        });
+        */
+      </script>
+
+
+      <script>
+        //Set a bunch of variables based on user input
+        var bandwidth = document.getElementById("bandwidth");
+        var output = document.getElementById("sliderValue");
+        var minDistInput = document.getElementById("minDistInput");
+        var minDistValue = document.getElementById("minDistValue");
+        var maxDistInput = document.getElementById("maxDistInput");
+        var maxDistValue = document.getElementById("maxDistValue");
+
+        //This section just edits the values so that the sliders work
+        clustersEnabled = false;
+        output.innerHTML = bandwidth.value;
+        bandwidth.oninput = function() {
+          output.innerHTML = this.value;
+        }
+        minDistInput.oninput = function() {       minDistValue.innerHTML = this.value;        }
+        maxDistInput.oninput = function() {       maxDistValue.innerHTML = this.value;        }
+
+        //can we delete this?
+        function myfunction(){ console.log("hello");  $("#encdirectly").show();  }        
+
+        //Enables the cluster detection tools
+        $("#enableInfoLoss").click(function(){
+          clustersEnabled = true;
+          $("#infoDiv").show();
+          $(".slideContainer").show();
+        });
+
+        //The Map!
+        
+        var map = new ol.Map({
+          target: 'map',
+          layers: [
+            new ol.layer.Tile({
+              source: new ol.source.XYZ({
+                url:'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',
+              })
+            })
+          ],
+          view: new ol.View({
+            center: ol.proj.fromLonLat([174, -41]),
+            zoom: 5,  maxZoom: 13
+          })
+        }); 
+        
+    
+        //Download button, defines the options for shpwrite and then triggers the download. Also loads the citation page upon click
+        $("#downloadMasked").on("click", function () {
+          //$("#citation").load();
+          var options = {
+            folder: 'MaskedData',
+            types: {  point: 'MaskedPoints',  }
+          }
+          console.log("Download Masked");
+          shpwrite.download(masked.reprojected, options);
+        });
+
+        //Trigger functions based on user input from buttons
+        $("#sensitiveInput").change(function(){
+          //console.log('here 0a sensitive.data: ' + sensitive.data)		
+          //console.log('here 0a sensitiveMed.data: ' + sensitiveMed.data)
+          loadShapeFile("sensitiveInput", "sensitiveTag", "sensitive") //,
+          //loadShapeFile("sensitiveInput", "sensitiveTag", "sensitiveMed")
+          //console.log('here 0b sensitive.data: ' + sensitive.data)		
+          //console.log('here 0b sensitiveMed.data: ' + sensitiveMed.data)
+        });
+        $("#boundaryInput").change(function(){
+          loadShapeFile("boundaryInput", "boundaryTag", "boundary")}
+        );
+        $("#display23").click(function(){
+          console.log("Beginning to display");
+          toMap(sensitive.data, sensitive.style)
+          //, //toMap(boundary.data, boundary.style)
+          console.log("Finished displaying");
+          }
+        );
+        $("#mask").click(function(){	
+          xyz.displace("sensitive", "masked"), //"sensitiveMed", "maskedMed","sensitiveCoarse", "maskedCoarse"),									
+              toMap(sensitive.data, sensitive.style),
+              toMap(masked.data, masked.style),
+              toMap(sensitiveClusters.cluster, sensitiveClusters.style),
+              toMap(maskedClusters.cluster, maskedClusters.style)							
+          }
+        );
+        //14-11-2021 ..h3 binning
+        $("#bin").click(function(){										
+          sensitive = h3binning(sensitive)         
+//       							const feature = geojson2h3.h3SetToFeature(hexagons);
+              // -> {type: 'Feature', properties: {}, geometry: {type: 'Polygon', coordinates: 
+          
+//									toMap(sensitive.data, sensitive.style)
+          }
+        );
+        $("#clear").click(function(){
+          location.reload()}
+        );
+        //added 02-oct-2021
+        $("#encryptedInput").change(function(){
+          //console.log("Console: here 176");
+          //showZippedFileContents("encryptedInput")
+        });
+        //09-11-2021..print receipt
+        $("#print-btn").click(function(){
+          console.log("Print receipt");
+          saveReceipt()
+        });
+
+        //23-10-2021...document encyption option
+        $(document).ready(function() {
+          $("input[name$='to_encrypt']").click(function() {
+            //console.log("Console: here 187");
+            var test = $(this).val();
+            if(test == 1 ){
+              //console.log("test == 1 ");
+              $("#encryptionOption").show();
+              $("#dwnEncrypted").show();											
+            }
+            else {
+              //console.log("test == 2 ");
+              $("#encryptionOption").hide();
+              $("#dwnEncrypted").hide();
+              //$("div.encryptionOption").hide();
+              //$("div.dwnEncrypted").hide();											
+            }
+          });
+        });
+
+      </script>
+
+      <script>
+								// generate passphrase on page load
+								addEventListener('DOMContentLoaded', function() {
+									/* 23-july 2021
+									computepw();
+									genBut.addEventListener('click', computepw);
+									*/
+									//new passphrase generator
+									//Calling initialiseArray() function: 
+									initialiseArray();
+									//copy the passphrase
+									copyBut.addEventListener('click', copypw);
+									copyHashBut.addEventListener('click', copyHash);									
+								});
+			</script>
+
+    </article>
+
+    <!-- Background -->
+    <div id="bg"></div>
+
+    <!-- Tags for injecting geoJSON data -->
+    <script id="sensitiveTag"></script>
+    <script id="boundaryTag"></script>
+
+
+</div> <!-- End for id="div1" -->
+
+<div id ="newdiv">
+
+</div>
+
+<div class="row">
+  <div class="col-md-8">
+    <section class="widget" id="incomplete-download-list" style="display:none;">
+      <h3>{% trans "Upload status" %}</h3>
+      <table
+        class="table table-bordered upload-progress-table"
+        data-resume-tool-tooltip="{% trans 'This file needs additional configuration to complete the upload process. Please click on the button to fill the required configuration' %}"
+        data-remove-tool-tooltip="{% trans 'Delete' %}"
+        data-success-tool-tooltip="{% trans 'Upload process completed' %}"
+        data-invalid-tool-tooltip="{% trans 'The upload process cannot be completed because the original file is no more available' %}"
+      >
+        <thead>
+          <tr>
+            <td scope="row">{% trans "Name" %}</td>
+            <td>{% trans "Created" %}</td>
+            <td>{% trans "Progress" %}</td>
+            <td></td>
+            <td></td>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+      <nav aria-label="Upload progress navigation" class="text-center">
+        <ul class="pagination pagination-sm"  style="margin-top:0;">
+          <li class="upload-progress-prev-page">
+            <a aria-label="Previous">
+              <span aria-hidden="true"><i class="fa fa-angle-left"></i></span>
+            </a>
+          </li>
+          <li class="upload-progress-page" style="display:none;">
+            <a>
+              {% trans "page" %}
+              <span class="upload-progress-page-count"></span>
+              {% trans "of" %}
+              <span class="upload-progress-page-total"></span>
+            </a>
+          </li>
+          <li class="upload-progress-next-page">
+            <a aria-label="Next">
+              <span aria-hidden="true"><i class="fa fa-angle-right"></i></span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div
+        class="modal fade"
+        id="remove-incomplete-upload-modal"
+        tabindex="-1"
+        role="dialog"
+        aria-labelledby="remove-incomplete-upload-modal-label">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <h4 class="modal-title" id="remove-incomplete-upload-modal-label">{% trans "Delete incomplete upload" %}</h4>
+            </div>
+            <div class="modal-body">
+              {% trans "Are you sure you want to remove this incomplete upload?" %}
+              <br/>
+              {% trans "Name" %}: <span class="remove-incomplete-upload-modal-name"></span>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">{% trans "No, don't remove it" %}</button>
+              <button type="button" class="btn btn-danger remove-incomplete-upload-modal-button">{% trans "Yes, I am sure" %}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {% block additional_info %}{% endblock %}
+
+    {% if errors %}
+    <div id="errors" class="alert alert-danger">
+      {% for error in errors %}
+      <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div id="upload-status"></div>
+
+    <div id="upload-directly">
+
+      <section id="drop-zone">
+        <h3><i class="fa fa-cloud-upload"></i><br />{% trans "Drop files here" %}</h3>
+      </section>
+
+      <p>{% trans " or select them one by one:" %}</p>
+    
+
+      <!-- What is Enctype multipart form-data in HTML?
+      enctype='multipart/form-data is an encoding type that allows files to be sent through a POST. 
+      Quite simply, without this encoding the files cannot be sent through POST. 
+      If you want to allow a user to upload a file via a form, you must use this enctype. -->
+
+      <!-- Where is the file posted to?  -->
+      <!-- After we upload the file, and posting, when is it loaded in the database?  -->
+      <!-- Do we have to encrypt the file before posting?  -->
+
+      <form id="file-uploader" method="post" enctype="multipart/form-data">
+        <!-- UI change to hide the list of previously uploaded files from the user -->
+        <input type="file" id="file-input" style="display: none;" multiple>
+        <input class="btn btn-default" type="button" value="{% trans "Choose Files" %}" onclick="document.getElementById('file-input').click();">
+      </form>
+    
+      <section class="widget">
+        <ul id="global-errors"></ul>
+        <h4>{% trans "Files to be uploaded" %}</h4>
+        <div id="file-queue"></div>
+        <div class="checkbox" style="display:none;" id="metadata_uploaded_preserve_check">
+            {% trans "Preserve Metadata XML" %} <input type="checkbox" name="metadata_uploaded_preserve" id="id_metadata_uploaded_preserve"/>
+        </div>
+      </section>
+
+      <section class="charset">
+        <p>{% trans "Select the charset or leave default" %}</p>
+        <select id="charset">
+          {% for charset in charsets %}
+          {% if charset.0 == 'UTF-8' %}
+          <option selected='selected' value={{ charset.0 }}>{{ charset.1 }}</option>
+          {% else %}
+          <option value={{ charset.0 }}>{{ charset.1 }}</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+      </section>
+
+    </div>
+
+
+    <!-- All the Data sovereignty processing has to be done after the file upload and before the following upload-button is pressed -->
+    <!-- What hapens when you press the upload-button? -->
+    <!-- moved to encryption tab of safeguarding flow -->
+    <section>
+      <a href="{% url "layer_upload" %}" id="clear-button" class="btn btn-default">{% trans "Clear" %}</a>
+      <a href="#" id="upload-button" class="btn btn-primary">{% trans "Upload files" %}</a>
+    </section>
+    
+  </div>
+
+  {% display_change_perms_button resource request.user perms_list as display_perms_button %}
+  {% if display_perms_button %}
+  <div class="col-md-4">
+    <h3>{% trans "Permissions"  %}</h3>
+    <form id="permission_form">
+      {% include "_permissions.html" %}
+    </form>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+
+{% block extra_script %}
+{{ block.super }}
+<script data-main="{% static 'geonode/js/upload/main.js' %}"
+  src="{% static 'lib/js/require.js' %}">
+</script>
+<script >
+{% autoescape off %}
+
+  csrf_token =  "{{ csrf_token }}",
+  form_target = "{{ UPLOADER_URL }}",
+  time_enabled = {{ TIME_ENABLED|lower  }},
+  mosaic_enabled = {{ MOSAIC_ENABLED|lower  }},
+  userLookup = "{% url "account_ajax_lookup" %}"
+
+{% endautoescape %}
+
+</script>
+{% if GEONODE_SECURITY_ENABLED %}
+{% with resource=layer %}
+{% include "_permissions_form_js.html" %}
+{% endwith %}
+{% endif %}
+{% endblock extra_script %}
+

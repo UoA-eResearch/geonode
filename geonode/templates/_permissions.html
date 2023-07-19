@@ -1,5 +1,21 @@
 {% load i18n %}
 
+
+<script type="text/javascript">
+
+  $(document).ready(function() {
+      $('input[type=radio][name="view_resourcebase_users"]').change(function() {
+          console.log('hello 3')
+          alert($(this).val()); // or, use `this.value`
+      });
+    });
+
+  function getValue(radio) {
+    console.log('here 00')
+  }
+
+</script>    
+
 <style>
   .select2-selection.required {
     background-color: #ffffcc !important;
@@ -29,7 +45,7 @@
         <div class="radio">
           <label>
             {% trans "The following users:" %}
-            <select class="user-select" name="view_resourcebase_users" id="view_resourcebase_users" required></select>
+            <select class="user-select" name="view_resourcebase_users" id="view_resourcebase_users" onchange="getValue2(this)" required></select>
           </label>
         </div>
         <div class="radio">

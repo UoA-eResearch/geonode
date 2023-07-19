@@ -1,6 +1,68 @@
-{% extends "geonode_base.html" %}
+{% extends "base.html" %}
 
 {% load i18n %}
+
+{% load staticfiles %} 
+
+{% load static %}
+{% load floppyforms %}
+
+
+<!--<link href="{% static "lib/css/bootstrap-select.css" %}" rel="stylesheet" />-->
+<script type="text/javascript" src="{% static "geonode/js/utils/thumbnail.js" %}"></script>
+
+<!-- Required to make select2 fields work for autocomplete -->
+<link href="{% static "vendor/select2/dist/css/select2.css" %}" type="text/css" media="screen" rel="stylesheet" />
+<link href="{% static "autocomplete_light/select2.css" %}" type="text/css" media="screen" rel="stylesheet" />
+<script type="text/javascript" src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/jquery.init.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/select2/dist/js/select2.full.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/select2/dist/js/i18n/en.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/autocomplete.init.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/forward.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/select2.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/jquery.post-setup.js" %}"></script>
+
+
+ <script src="{% static "ds_assets/js/skel.min.js" %}"></script>
+    <script src="{% static "ds_assets/js/util.js" %}"></script>
+    <script src="{% static "ds_assets/js/main.js" %}"></script>
+    <script src="{% static "ds_assets/js/turf.min.js" %}"></script>
+    <script src="{% static "ds_assets/js/shpwrite.js" %}"></script>
+    <script src="{% static "ds_assets/js/jquery.min.js" %}"></script>
+    <script src="{% static "ds_assets/js/ol.js" %}"></script>
+    <script src="{% static "ds_assets/js/shp.min.js" %}"></script>
+    <script src="{% static "ds_assets/js/jszip.min.js" %}"></script>
+    <script src="{% static "ds_assets/js/FileSaver.js" %}"></script>
+    <script src="{% static "ds_assets/js/xyz.js" %}"></script>
+    <script src="{% static "ds_assets/js/proj4.js" %}"></script>
+    <script src="{% static "ds_assets/js/jquery.gifplayer.js" %}"></script>
+    <script src="{% static "ds_assets/js/dstool.js" %}"></script>						
+    <script src="{% static "ds_assets/js/passphrase.js" %}"></script>
+    <script src="{% static "ds_assets/js/jquery.min.js" %}></script>
+    <script src="{% static "ds_assets/js/jquery.scrollex.min.js" %}></script>
+    <script src="{% static "ds_assets/js/jquery.scrolly.min.js" %}></script>
+    <script src="{% static "ds_assets/js/browser.min.js" %}></script>
+    <script src="{% static "ds_assets/js/breakpoints.min.js" %}></script>
+    <script src="{% static "ds_assets/js/util.js" %}></script>
+    <script src="{% static "ds_assets/js/main.js" %}></script>
+    <script src="{% static "ds_assets/js/multistep.js" %}></script>
+    <!-- multistep  -->
+    <script src="{% static "ds_assets/multi-step/script2.js" %}"></script>
+    <script src="{% static "ds_assets/multi-step/script.js" %}"></script>
+   
+    <!-- cdnjs stored locally  -->
+    <script src="{% static "ds_cdnjs/bootstrap.min.js" %}"></script>
+    <script src="{% static "ds_cdnjs/intlTelInput.js" %}"></script>
+    <script src="{% static "ds_cdnjs/jquery.easing.min.js" %}"></script>
+    <!-- <script src="{% static "ds_cdnjs/jquery.min.js" %}"></script>  -->
+    <script src="{% static "ds_cdnjs/jquery.nice-select.min.js" %}"></script>
+    <script src="{% static "ds_cdnjs/popper.min.js" %}"></script>
+
+
+
+
+
 {% block title %} {% trans "User Guide" %} - {{ block.super }} {% endblock %}
 
 {% block body_outer %}

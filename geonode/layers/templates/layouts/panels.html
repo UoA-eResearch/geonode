@@ -507,6 +507,10 @@ span.grippy::after {
                     <span><label for="{{ layer_form.supplemental_information|id }}">{{ layer_form.supplemental_information.label }}</label></span>
                     <!--<p class="xxs-font-size">(Any other descriptive information about the dataset)</p>-->
                     {{ layer_form.supplemental_information }}
+                    
+                    <span><label for="{{ layer_form.notarisation_url|id }}">{{ layer_form.notarisation_url.label }}</label></span>
+                    <!--<p class="xxs-font-size">(Any other descriptive information about the dataset)</p>-->
+                    {{ layer_form.notarisation_url }}
                 </div>
                 {% endblock layer_supplemental_information %}
             </div>

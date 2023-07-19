@@ -33,6 +33,30 @@
 {{ block.super }}
 {% endblock %}
 
+<script type="text/javascript">
+  const encrypted_file_from_server;
+	//Create sensitive data layer and add styling
+	var sensitive = {
+		style: new ol.style.Style({
+			image: new ol.style.Circle({
+				radius: 3,
+				fill: new ol.style.Fill({
+					color: '#FF8078'
+				}),
+				stroke: new ol.style.Stroke({
+					color: 'black',
+					width: .5
+				})
+			})
+		}),
+	};
+
+  </script>
+
+
+
+
+
 
 {% block body_class %}layers{% endblock %}
 
@@ -235,6 +259,16 @@
         {% endwith %}
       </article>
       {% endif %}
+      
+      {% if DISPLAY_VERIFICATION %}
+      <article id="verification" class="tab-pane"> 
+        {% with resource as obj %}       
+          {% include "_verification.html" %}  
+        {% endwith %}     
+      </article>
+      {% endif %}
+      
+      
 
       {% if DISPLAY_RATINGS %}
       <article id="rate" class="tab-pane">
@@ -259,6 +293,9 @@
     </div>
 
   </div>
+  
+  <!-- <div id="map" style="height:40vh; width: 79vh"></div> -->
+
   <div class="col-md-4">
 
     <ul class="list-group">
@@ -582,6 +619,87 @@
       </div>
     </div>
 
+    {% if user.is_authenticated and not READ_ONLY_MODE %}
+       <li class="list-group-item"> 
+        <h4>{% trans "Verification" %}</h4>
+
+        <style>
+
+            input[type="checkbox"] + label {
+              position: absolute;
+              width: 40px;
+              height: 40px;
+              border: 5px solid #555;
+              border-radius: 100%;
+              top: 50%;
+              left: 10%;
+              transform: translate(-50%, -50%);
+              transition: all ease-out 200ms;
+              text-indent: 90px;
+              font: normal normal 30px/60px "Helvetica";
+              white-space: nowrap;
+              color: #555;
+              user-select: none;
+              
+              &:after {
+                content: "";
+                position: absolute;
+                width: 0px;
+                height: 25px;
+                border-bottom: 10px solid #22b573;;
+                border-left: 10px solid #22b573;
+                top: 25%;
+                left: 50%;
+                transform-origin: bottom left;
+                transform: rotate(-45deg);
+                opacity: 0;
+                transition: all ease-out 200ms;
+              }
+            }
+
+            input[type="checkbox"]:checked + label {
+              border: 10px solid #22b573;;
+              
+              &:after {
+                opacity: 1;
+                width: 70px;
+              }
+            }
+
+            #chk {
+              display: none;
+            }
+
+        </style>
+
+        <!--
+        <ol class="switches">        
+          <input type="checkbox" id="hashVerified">
+        -->
+        <!--  
+        <div class="text-center d-inline-block">
+          <div class="vc-toggle-container">
+          Dataset verified True: 
+            <label class="vc-switch">
+              <input type="checkbox" class="vc-switch-input" />
+              <span class="vc-switch-label" data-on="Yes" data-off="No"></span>
+              <span class="vc-handle"></span>
+            </label>
+          </div>
+        </div> -->
+        
+        Dataset verified True: 
+        <input type="checkbox" id="chk">
+        <label for="chk" click this styled checkbox>
+        
+        <!-- more list items here -->
+      </ol>
+        <!--
+        <p>{% trans "Click the button below to generate a new map based on this layer." %}</p>
+          <a href="{% url "new_map" %}?layer={{resource.service_typename}}" class="btn btn-primary btn-block">{% trans "Create a Map" %}</a>
+        -->     
+      </li>  
+    {% endif %}
     {% if resource.get_legend %}
     <li class="list-group-item">
       <h4 class="list-group-item-heading">{%trans "Legend" %}</h4>
@@ -749,6 +867,153 @@
       </div>
   </div>
 
+  
+  <!-- 16 January 2023. For map display within decryption tab -->
+  <script type="module">			
+		//The Map!
+    
+		var map = new ol.Map({
+			target: 'map',
+			layers: [
+				new ol.layer.Tile({
+					source: new ol.source.XYZ({
+						url:'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',
+					})
+				})
+			],
+			view: new ol.View({
+				center: ol.proj.fromLonLat([174, -41]),
+				zoom: 5,
+				maxZoom: 13
+			})
+		}); 
+
+    function myFunction() { 
+      console.log('my function is called')           
+        var x = document.getElementById("map");
+        if (x.style.display === "none") {                               
+            x.style.display = "block";
+            map.updateSize();
+        } else {
+            x.style.display = "none";
+        }
+    }
+
+    function displayDecryptedMap(){
+      console.log('here 90')
+      //var decrypted_file_data = await decryptData
+      //`big encrypted zip file' is encrypted. So here we Decrypt it into file content into fileobject so we can iterate over each file
+      //var file = new File([decrypted_file_data], "decrypted.txt", {
+      //    type: "text/plain",
+      //}); 
+      v_objFile = encrypted_file_from_server; //file; //assign to variable used below
+      file_name = filename;
+/*
+      var jsZip = new JSZip();
+      //var fileNum = 0;
+      jsZip.loadAsync(v_objFile).then(function (zip) {
+          Object.keys(zip.files).forEach(function (filename){
+              //iterate over the zipped file 
+              zip.files[filename].async('string').then(function (fileData){
+                  console.log("\t filename: " + filename);   
+                  //if we found the shapefile file 
+                  if (filename.endsWith('.zip') )
+                  {
+                      console.log("\t file to decrypt: " + filename); // decrypt the file here //projFileName = i;                        
+                      //we decrypt the encrypted volume at that level, display and allow user to save the decrypted file                    
+                      console.log("\t For verification. We can display the map here");                                         
+                      zipfile = zip; 
+*/ 
+                      zip = encrypted_file_from_server;
+                      file_name = filename;
+                      // 23-May-2023 We have shifted this block of code to the H3Binning_verification.js file
+                      zip.file(filename).async('blob').then( (blob) => 
+                      {
+                          (async () => {
+                              const buf = await blob.arrayBuffer(); //blobToArrayBuffer(blob); //await blob.arrayBuffer();
+                              console.log("buf.byteLength: " + buf.byteLength ); // 5
+                                    
+                              shp(buf).then(function (geojson) {                                
+                                  sensitive.data  = JSON.stringify(geojson); //removeEmpty(JSON.stringify(geojson, undefined, 4)) // first use JSON.stringify ); 
+                                  $("#sensitiveTag").html("sensitive.data = " + sensitive.data + ";"); // fileData + ";"); //JSON.stringify(geojson) + ";");  
+                                  decryptedGEOJSON = sensitive.data;
+                                  console.log("Loaded geojson"); // + JSON.stringify(geojson));
+
+                                  var x = document.getElementById("map");
+                                  x.style.display = "block";
+                                  $("#map").fadeIn("slow");
+                                  var styleChoice = sensitive.style;
+                                  var source = new ol.source.Vector({
+                                    features: (new ol.format.GeoJSON()).readFeatures(decryptedGEOJSON, { featureProjection: 'EPSG:3857' })
+                                  });
+                                  decryptedGEOJSON.layer = new ol.layer.Vector({
+                                    zIndex: 9, renderMode: 'image',   source: source,    style: styleChoice
+                                  });
+                                  map.addLayer(decryptedGEOJSON.layer);        
+                                  var extent = decryptedGEOJSON.layer.getSource().getExtent();        
+                                  console.log('extent:' + extent)
+                                  //map.getView().fit(extent, { size: map.getSize(), maxZoom: 13 });                                   
+                                  map.updateSize();   
+                              });
+                            })();  
+                      }); 
+                      console.log("Displayed Map") 
+//                  } //end if                  
+ //             })   //end object keys        
+ //         }) //end jszip
+ //     }).catch(err => window.alert(err)) 
+    }
+
+    function displayDecryptedMap_old(){
+        console.log('displayDecryptedMap() function')
+        console.log('decryptedGEOJSON' + decryptedGEOJSON);	
+
+        var x = document.getElementById("map");
+        x.style.display = "block";
+
+        $("#map").fadeIn("slow");
+        decryptedGEOJSON = JSON.parse(decryptedGEOJSON)
+        //toMap2(decryptedGEOJSON, sensitive.style); 
+        
+        var styleChoice = sensitive.style;
+
+        var source = new ol.source.Vector({
+					features: (new ol.format.GeoJSON()).readFeatures(decryptedGEOJSON, { featureProjection: 'EPSG:3857' })
+				});
+				decryptedGEOJSON.layer = new ol.layer.Vector({
+					zIndex: 9,
+					renderMode: 'image',
+					source: source,
+					style: styleChoice
+				});
+				map.addLayer(decryptedGEOJSON.layer);        
+				var extent = decryptedGEOJSON.layer.getSource().getExtent();        
+				console.log('extent:' + extent)
+				//map.getView().fit(extent, { size: map.getSize(), maxZoom: 13 }); 
+        
+        map.updateSize();       
+    }
+
+    document.getElementById("displayMap").onclick = displayDecryptedMap;
+
+		/*var map = new ol.Map({
+        target: 'map',
+        layers: [
+          new ol.layer.Tile({
+            source: new ol.source.OSM()
+          })
+        ],
+        view: new ol.View() 
+      }); */
+      
+      //19 July 2023 ... only once everything is loaded, we call the verify_dataset function
+      console.log('Calling verify_dataset() function after page load')
+      document.onload  = verify_dataset(); 
+
+	</script>
+
+  
+
   {% if GEONODE_SECURITY_ENABLED %}
     {% include "_permissions_form.html" %}
   {% endif %}
@@ -815,6 +1080,399 @@
             {% endif %}
       </script>
     {% endblock thumbnail_script %}
+    
+
+
+  <!-- 16-May-2022 The DS Tools Tab-->  
+    <script type="text/javascript">
+    //will add another file upoad here in the encryption section so users can directly come to the encyprytion section and
+    //upload their encrypted data and decrypt it.
+    
+    //trigger on the private key file upload for the OpenPGP decryption 
+    $(document).ready(function(){
+        console.log("document.body.onload() gets called a: ");
+        $("#fileToLoad").on('change',function(){
+            //do whatever you want
+            loadFileAsTextForDec();
+        });
+        //map.updateSize(); this does not work
+    });
+
+    $(window).on('load', function() {
+      console.log('All assets are loaded')
+      map.updateSize();
+    })
+
+    /*
+    var map = new ol.Map({
+			target: 'map',
+			layers: [
+				new ol.layer.Tile({
+					source: new ol.source.XYZ({
+						url:'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',
+					})
+				})
+			],
+			view: new ol.View({
+				center: ol.proj.fromLonLat([-100, 45]),
+				zoom: 3,
+				maxZoom: 13
+			})
+		}); 
+    */
+
+    //08-June-2022. After page loads, call the verification of hash procedure
+    //https://stackoverflow.com/questions/14226803/wait-5-seconds-before-executing-next-line
+    //https://linuxhint.com/window-onload-event-in-javascript/
+    function verify_dataset() //tranx)
+    {
+      tranx = '0x820dbf87e847a1872a93fdaeda72e0f9ad5db3aab42df521e5389c29cd2a0e36'
+      //get the encrypted file from the geonode repo
+      var linked_document = $("#wrap ul.list-unstyled a[href^='/documents/']")[0]
+      if (linked_document) 
+      {
+        console.log("Found Linked document for this Layer");
+        console.log("Fetching the encrypted zipped file stored as a geonode document ");
+
+        fileName = $("ul.list-unstyled a[href^='/documents/']").first().text(); //"encrypted_file.zip.enc";
+        console.log('Retrieved fileName = ' + fileName);  //all_clusters_kamloops.zip.enc
+
+        //get the encrypted file from the geonode repo
+        fetch($("ul.list-unstyled a[href^='/documents/']")[0].href + "/download")
+          //.then(r => r.text()) // r is a blob, r.text() is a Promise which returns the text of the blob file
+          .then(r => r.blob())  //we need the text for OpenPGP decrypt function : the save would need the blob 
+            .then(blob =>    //body   //blob is needed for web.crypto       
+              //saveas works              
+              //saveAs(blob, "toDecryptFile.zip") //not sure for this -> saveAs(body, "decryptedVolume_.zip")
+              compare_hashes(blob, tranx)
+//           
+              //console.log('encrypted zipped file contents' + body)        
+        ).catch(error => console.log(error));
+      }
+      else{ //we inform the user that there is no linked document for this layer
+          console.log("No Linked document found");
+          alert("No Linked document found!");
+      } 
+      
+    }  
+
+    
+
+//    window.onload = js_onload_code(); 
+    //const delay = ms => new Promise(res => setTimeout(res, ms));
+
+    var option = 2; //1=Web.crypto, 2=OpenPGP
+
+    //Decrypts a user's uploaded encrypted file - only for testing MultiLevel Encryption
+    //this is the function that will be called when the user clicks the download decrypted button
+    //Needs user to upload a file -- this fuction is just to test if our file upload for decryption works on this page
+    function downloadDecrypted_uploadedFile() {
+          console.log("downloadDecrypted_uploadedFile: ");
+
+         
+
+          if (option == 1){
+            var mainPassphrase = document.getElementById("txtDecpassphrase").value;
+            console.log("passphrase: " + mainPassphrase);
+            if (mainPassphrase == "") { alert("Passphrase must be filled out"); return false;  } //validate passphrase
+          
+            //console.log("Map or Document Decryption (we don't know yet): ");
+            //get level to decrypt
+            //var lev = document.getElementsByName('vol_decrypt');
+            //https://stackoverflow.com/questions/15839169/how-to-get-value-of-selected-radio-button/26236365
+            var levelToDec = document.querySelector('input[name="vol_decrypt"]:checked').value;
+            console.log('level to decrypt = ' + levelToDec);
+          }
+
+          //objFile parameter has already been read in, last parameter just adds files to the zip
+          //05June-2022. We can choose either option
+          if (option == 1)
+            var decryptedData = multiLevelDecrypt(objFile, levelToDec, 3, mainPassphrase); //levelToDecrypt,currentLevel
+          else if(option == 2)
+          {
+            console.log('OpenPGP decryption');
+            //Call OpenPGP decryption
+            //similar to line 999, we have to first covert the blob into ciphertext          
+            
+            let reader = new FileReader();
+            reader.readAsText(objFile); //the file has already been uploaded, this 'objFile' is assigned in the openFile function in dstools.js
+            reader.onload = function() { 
+              //console.log('reader.result: ' + reader.result); 
+                            //ciphertextInFile //myBlob.text()
+              callOpenPGPDecrypt(reader.result, levelToDec, 1); //08-may2022..changed level from 3 to 1.  // myFile
+            };
+            reader.onerror = function() { console.log('reader.error:' + reader.error); };
+            
+            //callOpenPGPDecrypt(ciphertextInFile, v_levelToDec, 1); //08-may2022..changed level from 3 to 1.  // myFile
+          }
+		}
+
+    //this is the function that will be called when the user clicks the download decrypted button
+    //Will fetch the file -- this function will first fetch the file from the geonode repo and then decryt it 
+    function downloadDecrypted() 
+    {
+      console.log("Decryption: ");
+      var levelToDec; //level to decrypt
+     
+//$$      waitingDialog.show('Decryption...');
+
+      var choice = 2; //1= web.crypto, 2 = OpenPGP
+
+      if(choice == 1) {
+        var mainPassphrase = document.getElementById("txtDecpassphrase").value;
+        console.log("passphrase: " + mainPassphrase);
+        if (mainPassphrase == "") { alert("Passphrase must be filled out"); return false;  } //validate passphrase
+        console.log("passphrase A: " + mainPassphrase); 
+        //one of the option buttons for levels (coarse.medium and fine) should be selected at this point
+        if ($("input[name='vol_decrypt']").is(':checked') ) {
+          levelToDec = document.querySelector('input[name="vol_decrypt"]:checked').value;
+          console.log('level to decrypt = ' + levelToDec);
+        }        
+        else{  //if (levelToDec === null)
+          //alert('Please select a Level to decrypt!');
+          console.log('level to decrypt not chosen. Assigning value of 1 ');
+          levelToDec = 1; //default level to decrypt //decrypt to the deepest level (3 being the outermost)
+        }
+      }
+
+      /*      
+      console.log("Checking if there is a linked geonode document for this layer");
+      //get the encrypted file from the geonode repo
+      fetch($("ul.list-unstyled a[href^='/documents/']")[0].href + "/download")
+        //.then(r => r.text()) // r is a blob, r.text() is a Promise which returns the text of the blob file
+        .then(r => r.ok()) //A boolean indicating whether the response was successful (status in the range 200–299) or not.          
+          .then(body =>                          //https://developer.mozilla.org/en-US/docs/Web/API/Response
+              console.log('success' + body)        
+      ).catch(error => console.log(error));
+      */
+
+      //get the encrypted file from the geonode repo
+      var linked_document = $("#wrap ul.list-unstyled a[href^='/documents/']")[0]
+      if (linked_document) 
+      {
+          /* provided code
+          fetch(linked_document.href + "/download").then(r => 
+            r.blob()).then(blob => recursiveDecrypt(blob, 3, 3)
+          ).catch(error => console.log(error));
+          */
+        console.log("Found Linked document for this Layer");
+        console.log("Fetching the encrypted zipped file stored as a geonode document ");
+
+        fileName = $("ul.list-unstyled a[href^='/documents/']").first().text(); //"encrypted_file.zip.enc";
+        console.log('Retrieved fileName = ' + fileName);  //all_clusters_kamloops.zip.enc
+
+        //get the encrypted file from the geonode repo
+        fetch($("ul.list-unstyled a[href^='/documents/']")[0].href + "/download")
+          //.then(r => r.text()) // r is a blob, r.text() is a Promise which returns the text of the blob file
+          .then(r => r.blob())  //we need the text for OpenPGP decrypt function : the save would need the blob 
+            .then(blob =>    //body   //blob is needed for web.crypto       
+              //saveas works              
+              //saveAs(blob, "toDecryptFile.zip") //not sure for this -> saveAs(body, "decryptedVolume_.zip")
+              //myFile = new File([blob], fileName, blob)
+              //var file = new File(fileContentAsString, filename);
+              //recursiveDecrypt(new File(body, "test.zip.enc"), v_levelToDec, 3);  //file //blob //fileContentAsString
+              
+//              callFunction(myFile, levelToDec, passphrase)    //`body' is in string format --- of the encrypted zipped file
+           callDecryptionFunction(blob, levelToDec, mainPassphrase, option)    //`body' is in string format --- of the encrypted zipped file
+              //console.log('encrypted zipped file contents' + body)        
+        ).catch(error => console.log(error));
+      }
+      else{ //we inform the user that there is no linked document for this layer
+          console.log("No Linked document found");
+          alert("No Linked document found!");
+      }   
+
+      //enable display button
+      displayMap.enabled = true;
+
+    }
+
+    function loadingOut(loading) {
+				setTimeout(() => loading.out(), 1000);
+		}
+    
+    function callDecryptionFunction(myBlob, v_levelToDec, mainPassphrase, option) //for multiLevel, we pass the blob
+    //function callDecryptionFunction(ciphertextInFile, v_levelToDec) //for OpenPGP, we pass the text
+    {  //fileContentAsString
+        console.log('Inside callFunction()'); 
+        console.log("passphrase B: " + mainPassphrase);
+        //console.log('myBlob = ' + myBlob);
+        var filename = "encrypted_file.zip.enc";
+        
+        //to get the filenames
+        //layer title: $("h2.page-title").text()
+        //linked document title: $("ul.list-unstyled a[href^='/documents/']").first().text()
+        fileName = $("ul.list-unstyled a[href^='/documents/']").first().text(); //"encrypted_file.zip.enc";
+        console.log('Retrieved fileName = ' + fileName);  //all_clusters_kamloops.zip.enc
+        //fileName = fileName.substring(0, fileName.indexOf("."));   //remove the ''.zip.enc'' so that the level and zip can be added as file extension
+        //console.log('Modified fileName = ' + fileName);
+
+        //needed for multiLevel decrypt
+        /* const myFile = new File([myBlob], filename, {
+            type: 'application/zip', //myBlob.type,
+        }); */
+        //const myFile = new File([myBlob], fileName, myBlob);
+        encrypted_file_from_server = new File([myBlob], fileName, myBlob);
+        
+        //console.log('file: ' + myFile);
+
+        //Now when we check the instance it’ll be a File.
+//        console.log(myFile instanceof File);        // logs: true
+        //But, as it inherits from Blob it’ll also be a Blob.
+//        console.log(myFile instanceof Blob);        // logs: true        
+        
+        
+
+        //saveAs(myFile,'test.txt'); //downloads the OpenPGP encrypted message
+
+        //$('body').Wload({text:' Decrypting'})	
+        if(option == 1)
+          multiLevelDecrypt(encrypted_file_from_server, v_levelToDec, currentLevel = 3, mainPassphrase); //file //blob //fileContentAsString
+        else if (option == 2){
+          //first we have to covert the blob into ciphertext          
+           /* This code block only useful for text files decryption, doesnt work for zip (binary) files
+           let reader = new FileReader();
+           reader.readAsText(myFile);
+           reader.onload = function() { 
+              //console.log('reader.result: ' + reader.result); 
+                            //ciphertextInFile //myBlob.text()
+              callOpenPGPDecrypt(reader.result, v_levelToDec, 1); //08-may2022..changed level from 3 to 1.  // myFile
+              
+           };
+           reader.onerror = function() { console.log('reader.error:' + reader.error); };
+           */
+           //for binary files, we pass the file object
+                                    //myFile
+           callOpenPGPDecrypt_zipFile(myBlob, v_levelToDec, 1); //08-may2022..changed level from 3 to 1.  // myFile
+        }
+
+        //loadingOut(loading); //unload the loading animation
+        //$('body').Wload('hide',{time:3000})
+    } 
+
+    //16-Jan-2023 Code from this function is integrated as part of the module ~ line 800
+    //So function no longer used
+    //Adds a geojson layer to the map, using the selected OpenLayers style
+		/*
+    toMap2 = function(sourceGeoJSON, styleChoice) {
+				//delete sourceGeoJSON.layer;
+				//map.removeLayer(sourceGeoJSON.layer);
+
+        console.log('toMap2')
+
+        var source = new ol.source.Vector({
+					features: (new ol.format.GeoJSON()).readFeatures(sourceGeoJSON, { featureProjection: 'EPSG:3857' })
+				});
+				sourceGeoJSON.layer = new ol.layer.Vector({
+					zIndex: 9,
+					renderMode: 'image',
+					source: source,
+					style: styleChoice
+				});
+				map.addLayer(sourceGeoJSON.layer);        
+				var extent = sourceGeoJSON.layer.getSource().getExtent();        
+				console.log('extent:' + extent)
+				map.getView().fit(extent, { size: map.getSize(), maxZoom: 13 }); 
+        
+        map.updateSize(); 
+			  //mapContainer.updateSize();
+			  //map.resize();
+		}
+    */
+    
+    var textFromFileLoaded; //to hold user's private key read from uploaded file 
+
+    //02-May-2022 User's Public key upload
+    function loadFileAsTextForDec(){      
+      var fileToLoad = document.getElementById("fileToLoad").files[0];
+      var fileReader = new FileReader();
+      fileReader.onload = function(fileLoadedEvent){
+          textFromFileLoaded = fileLoadedEvent.target.result;
+          document.getElementById("inputTextToSave").value = textFromFileLoaded;
+          console.log('textFromFileLoaded: ' + textFromFileLoaded);
+      };
+      fileReader.readAsText(fileToLoad, "UTF-8");
+    }
+
+    
+     var decryption_tab = $(`
+          <article id='decryption' class='tab-pane'> 
+          
+          <div> 
+                <!-- Web Crypto code was here -->      
+    
+                <!-- Call 03 May 2022 OpenPGP Decryption -->
+                <h4> OpenPGP Decryption (uses Asymmetric keys) </h4>
+                <!-- <br> Only one level encryption and decryption. Three levels not needed with OpenPGP encryption  -->
+                <!-- <br> Note: we use the same decryption functions as in above, but thenon, pass to OpenPGP decryption. -->
+                <br> Decrypt the layer by providing your private key.
+                Alternatively, you can download the document (containing the encrypted layer), and use the OpenPGP desktop tool <a href="https://www.openpgp.org/software/kleopatra/">Kleopatra</a>, to decrypt inputing your private key.
+                <br> </br>
+
+                <!--
+                <span class="tooltiptext"><h5>1. Load your zipped encrypted file for decryption (or decrypt the stored layer in GeoNode).</h5></a> </span></span>              
+                // 19-10-21. The filevalidation function is also called fom inside the openFile function  
+                <input type="file" id="encryptedInputOpenPGP" onchange='openFile(event)' accept=".enc" >
+                -->
+
+              <style> 
+                  .tableOne {  margin:auto;              align : center;     text-align: center;   }
+                  .tableOne td {   text-align: center;   padding: 5px;        }
+                   td {    padding: 5px;                 align : center;      }
+                </style>
+    
+              <h5>1. Load your private key </h5>
+              <table class="tableOne"> <!-- cellpadding="10" cellspacing="10" -->
+                <tr>
+                  <td align="center" rowspan="5" > 
+                    <textarea id="inputTextToSave" name="inputTextToSave" style="width:400px;height:150px;" value="" placeholder="Paste your private key here...OR Load it from file"></textarea>  
+                  </td>
+                  <!-- <td align="center"> OR Load it from file:</td> -->
+                </tr>
+    
+                <tr>
+                  <td align="center"> <input type="file" id="fileToLoad">  </td>
+                </tr>
+
+                <!-- <tr>
+                  <td style="text-align:left"> <button class="buttondss buttondss4" onclick="loadFileAsTextForDec()">Load</button>   </td>
+                </tr> -->
+
+                <td> &nbsp </td>
+                <td> &nbsp </td>  
+              </table>
+
+              <div>
+                  <label>2. Enter Private key's Passphrase</label>
+                  <input type="password" class="form-control" id="pass" placeholder="Enter passphrase">
+                </div>  
+
+              <tr>
+                  <h5>3. Decrypt and Display</h5>
+                  <!-- <input type="button" width="250px" value="Download Decrypted" class="buttondss buttondss6" onclick="downloadDecrypted()"/>  -->                  
+                  <!--              
+                    <button id="dwnDecUploadedFileOpenPGP" style="margin: 0.5rem 0 .5rem 0; width: 30%;" onclick="downloadDecrypted_uploadedFile()" class="buttondss buttondss6">Decrypt uploaded Layer</button>
+                    Decrypt file (use 'Choose File' in above section) and Download<br>
+                  -->
+                  <button id="dwnDecryptedOpenPGP" style="margin: 0.5rem 0 .5rem 0; width: 30%;" onclick="downloadDecrypted()" class="buttondss buttondss6">Decrypt Layer and Download</button>
+                  <button id="displayMap"          style="margin: 0.5rem 0 .5rem 0; width: 30%;"  class="buttondss buttondss6">  Display Map </button>
+                  <!-- Or Decrypt the stored encrypted layer in Geonode and then Download <br> onclick="displayDecryptedMap()" disabled -->
+              </tr> 
+
+              <!-- Display map here display: none; -->
+              <div id="map" style="height:40vh; width: 79vh; " ></div> 
+              
+            <div>
+              <a id=aDecsavefile hidden><button>Save Decrypted File</button></a>
+            </div>
+          </div> 
+          </article>`);
+          
+
+      document.getElementById("displayMap").onclick = displayDecryptedMap;
+
+  </script>  
+  <!-- End DS Tools tab -->
 
   <script type="text/javascript">
 
@@ -1015,11 +1673,56 @@
           $("#button-toggle").css(enable_filter_style);
           $('#tabContent, .query_builder_tab').hide();
         });
+       
+
 
       });
+      
+      /* 
+        <h4> Web.Crypto Decryption (uses Symmetric keys)  </h4>
+            <br> Implements three level encryption. Shown here for testing. <br> <br>
+            decryption_tab
+            <span class="tooltiptext"><h5>1. Load your zipped encrypted file for decryption (or decrypt the stored layer in GeoNode).</h5> </a> </span></span>            
+            <!-- 19-10-21. The filevalidation function is also called fom inside the openFile function  -->
+            <input type="file" id="encryptedInput" onchange='openFile(event)' accept=".enc" >
+          
+            <br> <h5>2. Choose Volume To Decrypt</h5>
+            <div id="ChooseVolumeToDecrypt" class="tabcontent">												
+                  <input type="radio" id="coarse" 		name="vol_decrypt" value="3">    	<label for="coarse">Coarse</label>
+                  <input type="radio" id="medium" 		name="vol_decrypt" value="2">	    <label for="medium">Medium</label>
+                  <input type="radio" id="fine"       name="vol_decrypt" value="1">   	<label for="fine"> Fine</label>
+                <br> </br>
+            </div>			
+
+            <p><h5>3. Enter passphrase (the 5 words for coarse level, 10 for medium and 15 for fine)</h5>       
+              <input id=txtDecpassphrase type=text  size=85 value=''>																										
+              
+
+        <!-- 05 May 2022 comented out the original download decrypted button -->
+             <div> 
+                <h5>4. Decrypt</h5>
+                <button id="dwnDecUploadedFile" style="margin: 0.5rem 0 .5rem 0; width: 30%;" onclick="downloadDecrypted_uploadedFile()" class="buttondss buttondss6">Decrypt uploaded Layer</button>
+                Decrypt the just uploaded encrypted layer and Download <br>
+                <button id="dwnDecrypted" style="margin: 0.5rem 0 .5rem 0; width: 30%;" onclick="downloadDecrypted()" class="buttondss buttondss6">Decrypt stored Layer</button>
+                Or Decrypt the stored encrypted layer in Geonode and then Download <br>
+              </div> 
+
+                <br> </br> 
+                <!-- <br> </br> -->
+      */
+
+     
+
+      $("div.layer-actions ul.nav-tabs").append("<li><a href='#decryption' data-toggle='tab'><i class='fa fa-lock'></i>Decryption</a></li>")
+      //$("#wrap div.tab-content").first().append("<article id='decryption' class='tab-pane'> Your tab content here </article>")
+      $("#wrap div.tab-content").first().append(decryption_tab)
+      
+            
       {% if show_popup %}
         $('#download-layer').modal('toggle');
       {% endif %}
+      
+      document.getElementById("displayMap").onclick = displayDecryptedMap;
 
   </script>
 
@@ -1039,3 +1742,4 @@
     {% include "favorite/_favorite_js.html" %}
     {% endif %}
 {% endblock extra_script %}
+

@@ -1,0 +1,254 @@
+{% load dialogos_tags %}
+{% load pagination_tags %}
+{% load bootstrap_tags %}
+{% load i18n %}
+{% load avatar_tags %}
+
+{% load i18n %}
+
+<!-- <h1>Verification</h1> -->
+<!-- <h1>Verification</h1> -->
+  <!--<script type="text/javascript"> -->
+  <script type="text/javascript">
+    //will add another file upoad here in the encryption section so users can directly come to the encyprytion section and
+    //upload their encrypted data and decrypt it.
+    
+    //this is the function that will be called when the user clicks the download decrypted button
+    //Neds user to upload a file -- this fuction is just to test if our file upload for decryption works on this page
+    function downloadDecrypted_uploadedFile() {
+          console.log("downloadDecrypted_upladedFile: ");
+          console.log("Map or Document Decryption (we don't know yet): ");
+          //get level to decrypt
+          //var lev = document.getElementsByName('vol_decrypt');
+          //https://stackoverflow.com/questions/15839169/how-to-get-value-of-selected-radio-button/26236365
+          var levelToDec = document.querySelector('input[name="vol_decrypt"]:checked').value;
+          console.log('level to decrypt = ' + levelToDec);
+         
+          //objFile parameter has already been read in, last parameter just adds files to the zip
+          var decryptedData = recursiveDecrypt(objFile, levelToDec, 3); //levelToDecrypt,currentLevel           
+		}
+
+    //this is the function that will be called when the user clicks the download decrypted button
+    //Will fetch the file -- this function will first fetch the file from the geonode repo and then decryt it 
+    function downloadDecrypted() 
+    {
+      console.log("Decryption: ");
+      var levelToDec; //level to decrypt
+      
+      //one of the option buttons for levels (coarse.medium and fine) should be selected at this point
+      if ($("input[name='vol_decrypt']").is(':checked') ) {
+        levelToDec = document.querySelector('input[name="vol_decrypt"]:checked').value;
+        console.log('level to decrypt = ' + levelToDec);
+      }        
+      else{  //if (levelToDec === null)
+        //alert('Please select a Level to decrypt!');
+        console.log('level to decrypt not chosen. Assigning value of 1 ');
+        levelToDec = 1; //default level to decrypt //decrypt to the deepest level (3 being the outermost)
+      }
+
+      /*      
+      console.log("Checking if there is a linked geonode document for this layer");
+      //get the encrypted file from the geonode repo
+      fetch($("ul.list-unstyled a[href^='/documents/']")[0].href + "/download")
+        //.then(r => r.text()) // r is a blob, r.text() is a Promise which returns the text of the blob file
+        .then(r => r.ok()) //A boolean indicating whether the response was successful (status in the range 200–299) or not.          
+          .then(body =>                          //https://developer.mozilla.org/en-US/docs/Web/API/Response
+              console.log('success' + body)        
+      ).catch(error => console.log(error));
+      */
+
+      //get the encrypted file from the geonode repo
+      var linked_document = $("#wrap ul.list-unstyled a[href^='/documents/']")[0]
+      if (linked_document) 
+      {
+          /* provided code
+          fetch(linked_document.href + "/download").then(r => 
+            r.blob()).then(blob => recursiveDecrypt(blob, 3, 3)
+          ).catch(error => console.log(error));
+          */
+        console.log("Found Linked document for this Layer");
+        console.log("Fetching the encrypted zipped file stored as a geonode document ");
+        //get the encrypted file from the geonode repo
+        fetch($("ul.list-unstyled a[href^='/documents/']")[0].href + "/download")
+          //.then(r => r.text()) // r is a blob, r.text() is a Promise which returns the text of the blob file
+          .then(r => r.blob()) 
+            .then(body =>              
+              //saveas works
+              //saveAs(body, "decryptedVolume_.zip")
+              
+              //var file = new File(fileContentAsString, filename);
+              //recursiveDecrypt(new File(body, "test.zip.enc"), v_levelToDec, 3);  //file //blob //fileContentAsString
+              
+              callFunction(body, levelToDec)    //`body' is in string format --- of the encrypted zipped file
+              //console.log('encrypted zipped file contents' + body)        
+        ).catch(error => console.log(error));
+      }
+      else{ //we inform the user that there is no linked document for this layer
+          console.log("No Linked document found");
+          alert("No Linked document found!");
+      }
+
+    }
+
+    function loadingOut(loading) {
+				setTimeout(() => loading.out(), 1000);
+		}
+    
+    function callFunction(myBlob, v_levelToDec)
+    {  //fileContentAsString
+        console.log('Inside callFunction()');
+        //console.log('myBlob = ' + myBlob);
+        var filename = "encrypted_file.zip.enc";
+        
+        //to get the filenames
+        //layer title: $("h2.page-title").text()
+        //linked document title: $("ul.list-unstyled a[href^='/documents/']").first().text()
+        fileName = $("ul.list-unstyled a[href^='/documents/']").first().text(); //"encrypted_file.zip.enc";
+        console.log('Retrieved fileName = ' + fileName);  //all_clusters_kamloops.zip.enc
+        fileName = fileName.substring(0, fileName.indexOf("."));   //remove the ''.zip.enc'' so that the level and zip can be added as file extension
+        console.log('Modified fileName = ' + fileName);
+
+        const myFile = new File([myBlob], filename, {
+            type: 'application/zip', //myBlob.type,
+        });
+        //console.log('file: ' + myFile);
+
+        //Now when we check the instance it’ll be a File.
+        console.log(myFile instanceof File);        // logs: true
+        //But, as it inherits from Blob it’ll also be a Blob.
+        console.log(myFile instanceof Blob);        // logs: true
+        
+        
+        var loading = new Loading({
+					title: 					'Data Sovereignty',
+					titleColor: 			'rgb(217, 83, 79)',
+					discription: 			'Decrypting Layer...',
+					discriptionColor: 		'rgb(77, 150, 223)',
+					animationOriginColor: 	'rgb(33, 179, 132)',
+					mask: 					true,
+					loadingPadding: 		'20px 50px',
+			    defaultApply: 	true,
+				}); 
+
+        //$('body').Wload({text:' Decrypting'})		    
+
+        recursiveDecrypt(myFile, v_levelToDec, 3);  //file //blob //fileContentAsString
+        
+        loadingOut(loading); //unload the loading animation
+        //$('body').Wload('hide',{time:3000})
+    } 
+
+    var textFromFileLoaded; //to hold user's private key read from uploaded file 
+
+    //02-May-2022 User's Public key upload
+    function loadFileAsTextForDec(){      
+      var fileToLoad = document.getElementById("fileToLoad").files[0];
+      var fileReader = new FileReader();
+      fileReader.onload = function(fileLoadedEvent){
+          textFromFileLoaded = fileLoadedEvent.target.result;
+          document.getElementById("inputTextToSave").value = textFromFileLoaded;
+          console.log('textFromFileLoaded: ' + textFromFileLoaded);
+      };
+      fileReader.readAsText(fileToLoad, "UTF-8");
+    }
+
+  </script>
+
+
+<div> 
+          
+</div>  
+<!-- <br> -->	
+
+        <!-- <button type="button" id= "secondNextAction-button" class="next action-button">Continue</button>  -->
+      
+        <h4>Choose Volume To Decrypt</h4>
+      
+        <div id="ChooseVolumeToDecrypt" class="tabcontent">												
+              <input type="radio" id="coarse" 		name="vol_decrypt" value="3">    	<label for="coarse">Coarse</label>
+              <input type="radio" id="medium" 		name="vol_decrypt" value="2">	    <label for="medium">Medium</label>
+              <input type="radio" id="fine"       name="vol_decrypt" value="1">   	<label for="fine"> Fine</label>
+            <br> </br>
+        </div>											   
+
+<!--    05 May 2022 comented out the original download decrypted button
+        <p><strong>Enter passphrase (the 5 words for coarse level, 10 for medium and 15 for fine)</strong>       
+          <input id=txtDecpassphrase type=text  size=85 value=''>																										
+         <br> </br>
+         <button style="margin: 0.5rem 0 .5rem 0; width: 45%;" id="download-geonode-button" onclick="downloadDecrypted()" class="buttondss buttondss4">Download Decrypted Data</button>
+          <br> </br>
+          <br> </br>
+-->
+        <!-- <div id="dwnDecrypted"> <button style="margin: 1rem 0 0 0; width: 30%;" id="downloadDecrypted">Download Decrypted Data</button></a></div> -->
+          <!-- <input type="button" value="Download Decrypted Data" onclick="downloadDecrypted()"/>  --> 
+          <!-- <button type="button" id="firstskipaction-button" class="skip action-button">Download Decrypted Data</button>  -->
+      
+            <!-- Call 03 May 2022 OpenPGP Decryption -->
+            To decrypt the layer, download it and use the OpenPGP tool <a href="https://www.gnupg.org/download/">GnuPG</a> inputing your private key.
+            <br> Alternatively, decrypt the layer here by providing your private key.
+            <br> </br>
+          
+          <style> 
+              .tableOne {
+                margin:auto;                
+                align : center; 
+                text-align: center;
+              }
+
+              .tableOne td {
+                text-align: center;
+                padding: 5px; 
+              }
+
+              td {           
+              padding: 5px; 
+              align : center;           
+            }
+            </style>
+
+          <table class="tableOne"> <!-- cellpadding="10" cellspacing="10" -->
+            <tr>
+              <td align="center" rowspan="5" > 
+                <textarea id="inputTextToSave" name="inputTextToSave" style="width:400px;height:150px;" value="" placeholder="Paste your private key here..."></textarea>  
+              </td>
+              <td align="center"> OR Load it from file:</td>
+            </tr>
+
+            <tr>
+              <td align="center"> <input type="file" id="fileToLoad">  </td>
+            </tr>
+
+            <tr>
+              <td align="center"> <button onclick="loadFileAsTextForDec()">Load</button>   </td>
+            </tr>
+            <td> &nbsp </td>
+            <td> &nbsp </td>  
+          </table>
+
+          <tr>
+              <input type="button" width="250px" value=" Download Decrypted Data " class="buttondss buttondss4" onclick="downloadDecrypted()"/>  
+          </tr> 
+
+          {% comment %} 
+          <br> </br>
+          <br> </br> 
+          {% endcomment %}
+          
+          {% comment %} <div>
+            <!-- <span>Load the data you want to mask: </span><span class="icon fa-info-circle tooltip"> -->
+              <span class="tooltiptext">Load your zipped encrypted file for decryption.</a> </span></span><br>
+            <!-- <input type="file" id="encryptedInput" action="all_clusters_kamloops.zip" accept=".zip"> -->
+                                <!-- 19-10-21. The filevalidation function is also called fom inside the openFile function  -->
+            <input type="file" id="encryptedInput" onchange='openFile(event)' accept=".enc" >
+                 <button id="genBut" style="margin: 0.5rem 0 .5rem 0; width: 30%;" onclick="downloadDecrypted_uploadedFile()" class="buttondss buttondss6">Decrypt uploaded Layer</button>
+          </div> 
+           {% endcomment %}
+
+        <div>
+          <a id=aDecsavefile hidden><button>Save Decrypted File</button></a>
+        </div>
+
+<div id="comments_section" class="comments paginate paginate-manual">
+  <header>
+    <h3>{% trans 'Comments' %} <span class="total">({% comment_count resource %} {% trans 'total' %})</span></h3>
+

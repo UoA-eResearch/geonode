@@ -1,0 +1,90 @@
+<div>
+    Three levels not needed with OpenPGP encryption
+    <h4>Choose Volume To Decrypt</h4>
+    
+    <div id="ChooseVolumeToDecrypt" class="tabcontent">												
+          <input type="radio" id="coarse" 		name="vol_decrypt" value="3">    	<label for="coarse">Coarse</label>
+          <input type="radio" id="medium" 		name="vol_decrypt" value="2">	    <label for="medium">Medium</label>
+          <input type="radio" id="fine"       name="vol_decrypt" value="1">   	<label for="fine"> Fine</label>
+        <br> </br>
+    </div>											   
+
+
+<!-- 05 May 2022 comented out the original download decrypted button -->
+    <p><strong>Enter passphrase (the 5 words for coarse level, 10 for medium and 15 for fine)</strong>       
+        <input id=txtDecpassphrase type=text  size=85 value=''>																										
+        <br> </br>
+        <button style="margin: 0.5rem 0 .5rem 0; width: 45%;" id="download-geonode-button" onclick="downloadDecrypted()" class="buttondss buttondss4">Download Decrypted Data</button>
+        <br> </br>
+        <br> </br>
+
+    <!-- <div id="dwnDecrypted"> <button style="margin: 1rem 0 0 0; width: 30%;" id="downloadDecrypted">Download Decrypted Data</button></a></div> -->
+        <!-- <input type="button" value="Download Decrypted Data" onclick="downloadDecrypted()"/>  --> 
+        <!-- <button type="button" id="firstskipaction-button" class="skip action-button">Download Decrypted Data</button>  -->
+    
+        <!-- Call 03 May 2022 OpenPGP Decryption -->
+        To decrypt the layer, download it and use the OpenPGP tool <a href="https://www.gnupg.org/download/">GnuPG</a> inputing your private key.
+        <br> Alternatively, decrypt the layer here by providing your private key.
+        <br> </br>
+        
+        <style> 
+            .tableOne {
+            margin:auto;                
+            align : center; 
+            text-align: center;
+            }
+
+            .tableOne td {
+            text-align: center;
+            padding: 5px; 
+            }
+
+            td {           
+            padding: 5px; 
+            align : center;           
+        }
+        </style>
+
+        <table class="tableOne"> <!-- cellpadding="10" cellspacing="10" -->
+        <tr>
+            <td align="center" rowspan="5" > 
+            <textarea id="inputTextToSave" name="inputTextToSave" style="width:400px;height:150px;" value="" placeholder="Paste your private key here...OR Load it from file"></textarea>  
+            </td>
+            <!-- <td align="center"> OR Load it from file:</td> -->
+        </tr>
+
+        <tr>
+            <td align="center"> <input type="file" id="fileToLoad">  </td>
+        </tr>
+
+        <tr>
+            <td style="text-align:left"> <button class="buttondss buttondss4" onclick="loadFileAsTextForDec()">Load</button>   </td>
+        </tr>
+        <td> &nbsp </td>
+        <td> &nbsp </td>  
+        </table>
+
+        <tr>
+            <input type="button" width="250px" value="Download Decrypted" class="buttondss buttondss6" onclick="downloadDecrypted()"/>  
+        </tr> 
+        
+
+        {% comment %} 
+        <br> </br>
+        <br> </br> 
+        {% endcomment %}
+        
+        {% comment %} <div>
+        <!-- <span>Load the data you want to mask: </span><span class="icon fa-info-circle tooltip"> -->
+            <span class="tooltiptext">Load your zipped encrypted file for decryption.</a> </span></span><br>
+        <!-- <input type="file" id="encryptedInput" action="all_clusters_kamloops.zip" accept=".zip"> -->
+                            <!-- 19-10-21. The filevalidation function is also called fom inside the openFile function  -->
+        <input type="file" id="encryptedInput" onchange='openFile(event)' accept=".enc" >
+                <button id="genBut" style="margin: 0.5rem 0 .5rem 0; width: 30%;" onclick="downloadDecrypted_uploadedFile()" class="buttondss buttondss6">Decrypt uploaded Layer</button>
+        </div> 
+        {% endcomment %}
+
+    <div>
+        <a id=aDecsavefile hidden><button>Save Decrypted File</button></a>
+    </div>
+</div>

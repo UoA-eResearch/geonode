@@ -117,6 +117,11 @@ class Profile(AbstractUser):
         blank=True,
         null=True,
         help_text=_('country of the physical address'))
+    publickey = models.TextField(
+        _('Public Key'),        
+        blank=True,
+        null=True,
+        help_text=_('Pub key used to encrypt datasets'))  
     keywords = TaggableManager(_('keywords'), blank=True, help_text=_(
         'commonly used word(s) or formalised word(s) or phrase(s) used to describe the subject \
             (space or comma-separated'))

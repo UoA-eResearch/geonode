@@ -65,6 +65,10 @@ def resource_urls(request):
             settings,
             'DISPLAY_COMMENTS',
             False),
+        DISPLAY_VERIFICATION=getattr(
+            settings,
+            'DISPLAY_VERIFICATION',
+            False),
         DISPLAY_RATINGS=getattr(
             settings,
             'DISPLAY_RATINGS',
